@@ -7,8 +7,7 @@ import java.util.Properties;
 /**
  * OpenSearch接続設定を管理するクラス。
  * <p>
- * このクラスはイミュータブルであり、Builderパターンを使用して構築します。
- * application.propertiesから設定を読み込むか、プログラムで直接設定を指定できます。
+ * このクラスはイミュータブルであり、Builderパターンを使用して構築します。 application.propertiesから設定を読み込むか、プログラムで直接設定を指定できます。
  * </p>
  */
 public class OpenSearchConfig {
@@ -26,7 +25,8 @@ public class OpenSearchConfig {
     /**
      * Builderから設定を構築するプライベートコンストラクタ。
      *
-     * @param builder 設定値を保持する Builder
+     * @param builder
+     *            設定値を保持する Builder
      */
     private OpenSearchConfig(Builder builder) {
         this.host = builder.host;
@@ -43,16 +43,14 @@ public class OpenSearchConfig {
     /**
      * application.propertiesから設定を読み込んでOpenSearchConfigを作成する。
      * <p>
-     * プロパティファイルが見つからない場合や読み込みに失敗した場合は、
-     * デフォルト値が使用されます。
+     * プロパティファイルが見つからない場合や読み込みに失敗した場合は、 デフォルト値が使用されます。
      * </p>
      *
      * @return application.propertiesの値で初期化されたOpenSearchConfig
      */
     public static OpenSearchConfig fromProperties() {
         Properties props = new Properties();
-        try (InputStream is = OpenSearchConfig.class.getClassLoader()
-                .getResourceAsStream("application.properties")) {
+        try (InputStream is = OpenSearchConfig.class.getClassLoader().getResourceAsStream("application.properties")) {
             if (is != null) {
                 props.load(is);
             }
@@ -60,8 +58,7 @@ public class OpenSearchConfig {
             // デフォルト値を使用
         }
 
-        return new Builder()
-                .host(props.getProperty("opensearch.host", "localhost"))
+        return new Builder().host(props.getProperty("opensearch.host", "localhost"))
                 .port(Integer.parseInt(props.getProperty("opensearch.port", "9200")))
                 .scheme(props.getProperty("opensearch.scheme", "http"))
                 .connectionTimeout(Integer.parseInt(props.getProperty("opensearch.connection.timeout", "5000")))
@@ -69,8 +66,7 @@ public class OpenSearchConfig {
                 .numberOfShards(Integer.parseInt(props.getProperty("opensearch.index.number_of_shards", "1")))
                 .numberOfReplicas(Integer.parseInt(props.getProperty("opensearch.index.number_of_replicas", "0")))
                 .knnDimension(Integer.parseInt(props.getProperty("opensearch.knn.dimension", "128")))
-                .knnSpaceType(props.getProperty("opensearch.knn.space_type", "l2"))
-                .build();
+                .knnSpaceType(props.getProperty("opensearch.knn.space_type", "l2")).build();
     }
 
     /**
@@ -201,7 +197,9 @@ public class OpenSearchConfig {
         /**
          * OpenSearchのホスト名を設定する。
          *
-         * @param host ホスト名
+         * @param host
+         *            ホスト名
+         *
          * @return この Builder
          */
         public Builder host(String host) {
@@ -212,7 +210,9 @@ public class OpenSearchConfig {
         /**
          * OpenSearchのポート番号を設定する。
          *
-         * @param port ポート番号
+         * @param port
+         *            ポート番号
+         *
          * @return この Builder
          */
         public Builder port(int port) {
@@ -223,7 +223,9 @@ public class OpenSearchConfig {
         /**
          * 接続スキーム（http/https）を設定する。
          *
-         * @param scheme 接続スキーム
+         * @param scheme
+         *            接続スキーム
+         *
          * @return この Builder
          */
         public Builder scheme(String scheme) {
@@ -234,7 +236,9 @@ public class OpenSearchConfig {
         /**
          * 接続タイムアウト（ミリ秒）を設定する。
          *
-         * @param connectionTimeout 接続タイムアウト（ミリ秒）
+         * @param connectionTimeout
+         *            接続タイムアウト（ミリ秒）
+         *
          * @return この Builder
          */
         public Builder connectionTimeout(int connectionTimeout) {
@@ -245,7 +249,9 @@ public class OpenSearchConfig {
         /**
          * ソケットタイムアウト（ミリ秒）を設定する。
          *
-         * @param socketTimeout ソケットタイムアウト（ミリ秒）
+         * @param socketTimeout
+         *            ソケットタイムアウト（ミリ秒）
+         *
          * @return この Builder
          */
         public Builder socketTimeout(int socketTimeout) {
@@ -256,7 +262,9 @@ public class OpenSearchConfig {
         /**
          * インデックスのシャード数を設定する。
          *
-         * @param numberOfShards シャード数
+         * @param numberOfShards
+         *            シャード数
+         *
          * @return この Builder
          */
         public Builder numberOfShards(int numberOfShards) {
@@ -267,7 +275,9 @@ public class OpenSearchConfig {
         /**
          * インデックスのレプリカ数を設定する。
          *
-         * @param numberOfReplicas レプリカ数
+         * @param numberOfReplicas
+         *            レプリカ数
+         *
          * @return この Builder
          */
         public Builder numberOfReplicas(int numberOfReplicas) {
@@ -278,7 +288,9 @@ public class OpenSearchConfig {
         /**
          * k-NNベクトルのデフォルト次元数を設定する。
          *
-         * @param knnDimension ベクトルの次元数
+         * @param knnDimension
+         *            ベクトルの次元数
+         *
          * @return この Builder
          */
         public Builder knnDimension(int knnDimension) {
@@ -289,7 +301,9 @@ public class OpenSearchConfig {
         /**
          * k-NNの距離計算タイプを設定する。
          *
-         * @param knnSpaceType 距離計算タイプ（例: "l2", "cosinesimil"）
+         * @param knnSpaceType
+         *            距離計算タイプ（例: "l2", "cosinesimil"）
+         *
          * @return この Builder
          */
         public Builder knnSpaceType(String knnSpaceType) {

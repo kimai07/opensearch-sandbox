@@ -20,16 +20,14 @@ public class OpenSearchIndexClient implements IndexClient {
 
     @Override
     public boolean createIndex(String indexName, int numberOfShards, int numberOfReplicas,
-                                Map<String, Property> properties, boolean enableKnn) throws IOException {
-        CreateIndexRequest.Builder builder = new CreateIndexRequest.Builder()
-                .index(indexName)
-                .settings(s -> {
-                    s.numberOfShards(numberOfShards).numberOfReplicas(numberOfReplicas);
-                    if (enableKnn) {
-                        s.knn(true);
-                    }
-                    return s;
-                });
+            Map<String, Property> properties, boolean enableKnn) throws IOException {
+        CreateIndexRequest.Builder builder = new CreateIndexRequest.Builder().index(indexName).settings(s -> {
+            s.numberOfShards(numberOfShards).numberOfReplicas(numberOfReplicas);
+            if (enableKnn) {
+                s.knn(true);
+            }
+            return s;
+        });
 
         if (properties != null && !properties.isEmpty()) {
             builder.mappings(m -> m.properties(properties));
@@ -52,24 +50,18 @@ public class OpenSearchIndexClient implements IndexClient {
 
     @Override
     public boolean putMapping(String indexName, Map<String, Property> properties) throws IOException {
-        PutMappingResponse response = client.indices().putMapping(p -> p
-                .index(indexName)
-                .properties(properties));
+        PutMappingResponse response = client.indices().putMapping(p -> p.index(indexName).properties(properties));
         return response.acknowledged();
     }
 
     @Override
-    public boolean putIndexTemplate(String templateName, String indexPattern,
-                                     int numberOfShards, int numberOfReplicas,
-                                     Map<String, Property> properties) throws IOException {
-        PutIndexTemplateResponse response = client.indices().putIndexTemplate(p -> p
-                .name(templateName)
-                .indexPatterns(indexPattern)
-                .template(t -> t
-                        .settings(s -> s
-                                .numberOfShards(numberOfShards)
-                                .numberOfReplicas(numberOfReplicas))
-                        .mappings(m -> m.properties(properties))));
+    public boolean putIndexTemplate(String templateName, String indexPattern, int numberOfShards, int numberOfReplicas,
+            Map<String, Property> properties) throws IOException {
+        PutIndexTemplateResponse response = client.indices()
+                .putIndexTemplate(p -> p.name(templateName).indexPatterns(indexPattern)
+                        .template(t -> t
+                                .settings(s -> s.numberOfShards(numberOfShards).numberOfReplicas(numberOfReplicas))
+                                .mappings(m -> m.properties(properties))));
         return response.acknowledged();
     }
 

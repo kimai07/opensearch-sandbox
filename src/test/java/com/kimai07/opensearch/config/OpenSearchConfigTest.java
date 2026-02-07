@@ -29,17 +29,9 @@ class OpenSearchConfigTest {
     class BuilderConfig {
         @Test
         void testBuilderWithCustomValues() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .host("custom-host")
-                    .port(9201)
-                    .scheme("https")
-                    .connectionTimeout(10000)
-                    .socketTimeout(120000)
-                    .numberOfShards(3)
-                    .numberOfReplicas(2)
-                    .knnDimension(256)
-                    .knnSpaceType("cosinesimil")
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().host("custom-host").port(9201).scheme("https")
+                    .connectionTimeout(10000).socketTimeout(120000).numberOfShards(3).numberOfReplicas(2)
+                    .knnDimension(256).knnSpaceType("cosinesimil").build();
 
             assertThat(config.getHost()).isEqualTo("custom-host");
             assertThat(config.getPort()).isEqualTo(9201);
@@ -54,14 +46,8 @@ class OpenSearchConfigTest {
 
         @Test
         void testBuilderWithZeroValues() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .port(0)
-                    .connectionTimeout(0)
-                    .socketTimeout(0)
-                    .numberOfShards(0)
-                    .numberOfReplicas(0)
-                    .knnDimension(0)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().port(0).connectionTimeout(0).socketTimeout(0)
+                    .numberOfShards(0).numberOfReplicas(0).knnDimension(0).build();
 
             assertThat(config.getPort()).isZero();
             assertThat(config.getConnectionTimeout()).isZero();
@@ -73,14 +59,8 @@ class OpenSearchConfigTest {
 
         @Test
         void testBuilderWithNegativeValues() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .port(-1)
-                    .connectionTimeout(-100)
-                    .socketTimeout(-100)
-                    .numberOfShards(-1)
-                    .numberOfReplicas(-1)
-                    .knnDimension(-1)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().port(-1).connectionTimeout(-100)
+                    .socketTimeout(-100).numberOfShards(-1).numberOfReplicas(-1).knnDimension(-1).build();
 
             assertThat(config.getPort()).isEqualTo(-1);
             assertThat(config.getConnectionTimeout()).isEqualTo(-100);
@@ -89,11 +69,7 @@ class OpenSearchConfigTest {
 
         @Test
         void testBuilderWithNullValues() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .host(null)
-                    .scheme(null)
-                    .knnSpaceType(null)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().host(null).scheme(null).knnSpaceType(null).build();
 
             assertThat(config.getHost()).isNull();
             assertThat(config.getScheme()).isNull();
@@ -102,11 +78,7 @@ class OpenSearchConfigTest {
 
         @Test
         void testBuilderWithEmptyStringValues() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .host("")
-                    .scheme("")
-                    .knnSpaceType("")
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().host("").scheme("").knnSpaceType("").build();
 
             assertThat(config.getHost()).isEmpty();
             assertThat(config.getScheme()).isEmpty();
@@ -118,11 +90,8 @@ class OpenSearchConfigTest {
             OpenSearchConfig.Builder builder = new OpenSearchConfig.Builder();
 
             // メソッドチェーンが正しく動作することを確認
-            OpenSearchConfig config = builder
-                    .host("host1")
-                    .host("host2")  // 上書き
-                    .port(9200)
-                    .port(9201)     // 上書き
+            OpenSearchConfig config = builder.host("host1").host("host2") // 上書き
+                    .port(9200).port(9201) // 上書き
                     .build();
 
             assertThat(config.getHost()).isEqualTo("host2");
@@ -134,10 +103,7 @@ class OpenSearchConfigTest {
     class ConnectionUrl {
         @Test
         void testGetConnectionUrlWithHttp() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .scheme("http")
-                    .host("localhost")
-                    .port(9200)
+            OpenSearchConfig config = new OpenSearchConfig.Builder().scheme("http").host("localhost").port(9200)
                     .build();
 
             assertThat(config.getConnectionUrl()).isEqualTo("http://localhost:9200");
@@ -145,21 +111,14 @@ class OpenSearchConfigTest {
 
         @Test
         void testGetConnectionUrlWithHttps() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .scheme("https")
-                    .host("my-host")
-                    .port(443)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().scheme("https").host("my-host").port(443).build();
 
             assertThat(config.getConnectionUrl()).isEqualTo("https://my-host:443");
         }
 
         @Test
         void testGetConnectionUrlWithIpAddress() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .scheme("http")
-                    .host("192.168.1.100")
-                    .port(9200)
+            OpenSearchConfig config = new OpenSearchConfig.Builder().scheme("http").host("192.168.1.100").port(9200)
                     .build();
 
             assertThat(config.getConnectionUrl()).isEqualTo("http://192.168.1.100:9200");
@@ -167,11 +126,8 @@ class OpenSearchConfigTest {
 
         @Test
         void testGetConnectionUrlWithFqdn() {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .scheme("https")
-                    .host("opensearch.example.com")
-                    .port(9200)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().scheme("https").host("opensearch.example.com")
+                    .port(9200).build();
 
             assertThat(config.getConnectionUrl()).isEqualTo("https://opensearch.example.com:9200");
         }

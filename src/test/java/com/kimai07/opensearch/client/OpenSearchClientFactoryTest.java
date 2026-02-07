@@ -33,10 +33,7 @@ class OpenSearchClientFactoryTest {
 
         @Test
         void testCreateWithCustomConfig() throws IOException {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .host("custom-host")
-                    .port(9201)
-                    .scheme("https")
+            OpenSearchConfig config = new OpenSearchConfig.Builder().host("custom-host").port(9201).scheme("https")
                     .build();
 
             try (OpenSearchClientFactory factory = new OpenSearchClientFactory(config)) {
@@ -128,10 +125,7 @@ class OpenSearchClientFactoryTest {
     class ConfigAccess {
         @Test
         void testGetConfigReturnsProvidedConfig() throws IOException {
-            OpenSearchConfig config = new OpenSearchConfig.Builder()
-                    .host("test-host")
-                    .port(9999)
-                    .build();
+            OpenSearchConfig config = new OpenSearchConfig.Builder().host("test-host").port(9999).build();
 
             try (OpenSearchClientFactory factory = new OpenSearchClientFactory(config)) {
                 assertThat(factory.getConfig()).isSameAs(config);
