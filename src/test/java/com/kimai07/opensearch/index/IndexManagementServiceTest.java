@@ -18,7 +18,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,7 +45,7 @@ class IndexManagementServiceTest {
             boolean result = service.createIndex("test-index");
 
             assertThat(result).isTrue();
-            verify(mockClient).createIndex("test-index", eq(1), eq(0), eq(null), eq(false));
+            verify(mockClient).createIndex("test-index", 1, 0, null, false);
         }
 
         @Test
@@ -59,7 +58,7 @@ class IndexManagementServiceTest {
             boolean result = service.createIndex("test-index", properties);
 
             assertThat(result).isTrue();
-            verify(mockClient).createIndex("test-index", eq(1), eq(0), eq(properties), eq(false));
+            verify(mockClient).createIndex("test-index", 1, 0, properties, false);
         }
 
         @Test
@@ -71,7 +70,7 @@ class IndexManagementServiceTest {
             boolean result = service.createIndex("test-index", properties, true);
 
             assertThat(result).isTrue();
-            verify(mockClient).createIndex("test-index", eq(1), eq(0), eq(properties), eq(true));
+            verify(mockClient).createIndex("test-index", 1, 0, properties, true);
         }
 
         @Test
@@ -173,7 +172,7 @@ class IndexManagementServiceTest {
             boolean result = service.putMapping("test-index", properties);
 
             assertThat(result).isTrue();
-            verify(mockClient).putMapping("test-index", eq(properties));
+            verify(mockClient).putMapping("test-index", properties);
         }
 
         @Test
@@ -209,7 +208,7 @@ class IndexManagementServiceTest {
             boolean result = service.putIndexTemplate("logs-template", "logs-*", properties);
 
             assertThat(result).isTrue();
-            verify(mockClient).putIndexTemplate("logs-template", eq("logs-*"), eq(1), eq(0), eq(properties));
+            verify(mockClient).putIndexTemplate("logs-template", "logs-*", 1, 0, properties);
         }
 
         @Test
