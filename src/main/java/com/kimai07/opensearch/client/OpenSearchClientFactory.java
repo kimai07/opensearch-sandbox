@@ -14,8 +14,7 @@ import java.io.IOException;
 /**
  * OpenSearchClientのファクトリクラス。
  * <p>
- * OpenSearchへの接続を管理し、クライアントインスタンスを提供します。
- * シングルトンパターンでクライアントを管理し、リソースの効率的な利用を実現します。
+ * OpenSearchへの接続を管理し、クライアントインスタンスを提供します。 シングルトンパターンでクライアントを管理し、リソースの効率的な利用を実現します。
  * </p>
  * <p>
  * 使用後は必ず{@link #close()}を呼び出してリソースを解放してください。
@@ -35,7 +34,8 @@ public class OpenSearchClientFactory implements Closeable {
     /**
      * 指定された設定でファクトリを構築する。
      *
-     * @param config OpenSearch 接続設定
+     * @param config
+     *            OpenSearch 接続設定
      */
     public OpenSearchClientFactory(OpenSearchConfig config) {
         this.config = config;
@@ -65,8 +65,7 @@ public class OpenSearchClientFactory implements Closeable {
     /**
      * OpenSearchClientを取得する。
      * <p>
-     * クライアントは遅延初期化され、同じインスタンスが再利用されます（シングルトン）。
-     * このメソッドはスレッドセーフです。
+     * クライアントは遅延初期化され、同じインスタンスが再利用されます（シングルトン）。 このメソッドはスレッドセーフです。
      * </p>
      *
      * @return OpenSearchClient インスタンス
@@ -97,13 +96,10 @@ public class OpenSearchClientFactory implements Closeable {
 
         HttpHost host = new HttpHost(config.getScheme(), config.getHost(), config.getPort());
 
-        transport = ApacheHttpClient5TransportBuilder
-                .builder(host)
-                .setHttpClientConfigCallback(httpClientBuilder -> {
-                    configureHttpClient(httpClientBuilder);
-                    return httpClientBuilder;
-                })
-                .build();
+        transport = ApacheHttpClient5TransportBuilder.builder(host).setHttpClientConfigCallback(httpClientBuilder -> {
+            configureHttpClient(httpClientBuilder);
+            return httpClientBuilder;
+        }).build();
 
         return new OpenSearchClient(transport);
     }
@@ -111,7 +107,8 @@ public class OpenSearchClientFactory implements Closeable {
     /**
      * HTTPクライアントの設定を行う。
      *
-     * @param httpClientBuilder 設定対象の HttpAsyncClientBuilder
+     * @param httpClientBuilder
+     *            設定対象の HttpAsyncClientBuilder
      */
     private void configureHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
         // 接続設定は HttpAsyncClientBuilder で設定可能
@@ -129,8 +126,8 @@ public class OpenSearchClientFactory implements Closeable {
     public boolean testConnection() {
         try {
             var info = getClient().info();
-            logger.info("Connected to OpenSearch cluster: {}, version: {}",
-                    info.clusterName(), info.version().number());
+            logger.info("Connected to OpenSearch cluster: {}, version: {}", info.clusterName(),
+                    info.version().number());
             return true;
         } catch (IOException e) {
             logger.error("Failed to connect to OpenSearch: {}", e.getMessage());
@@ -144,7 +141,8 @@ public class OpenSearchClientFactory implements Closeable {
      * このメソッドを呼び出した後は、このファクトリから取得したクライアントは使用できません。
      * </p>
      *
-     * @throws IOException クローズ中にエラーが発生した場合
+     * @throws IOException
+     *             クローズ中にエラーが発生した場合
      */
     @Override
     public void close() throws IOException {
