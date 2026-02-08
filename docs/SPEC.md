@@ -86,7 +86,7 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 | メソッド | 説明 |
 |--------|------|
 | `matchQuery(String indexName, String field, String query, Class<T> clazz)` | Match Queryで検索 |
-| `multiMatchQuery(String indexName, List<String> fields, String query, Class<T> clazz)` | 複数フィールドに対するMatch Query |
+| `multiMatchQuery(String indexName, List<String> fields, String query, Class<T> clazz)` | 複数フィールドに対するMulti Match Query |
 | `boolQuery(String indexName, List<Query> must, List<Query> should, List<Query> mustNot, Class<T> clazz)` | Bool Queryで検索 |
 | `fuzzyQuery(String indexName, String field, String value, String fuzziness, Class<T> clazz)` | Fuzzy Queryで検索 |
 | `phraseMatchQuery(String indexName, String field, String phrase, Class<T> clazz)` | フレーズ一致検索 |
