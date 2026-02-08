@@ -50,47 +50,21 @@ mvn exec:java
 
 ```
 opensearch-sandbox/
-├── pom.xml                          # Maven設定
-├── compose.yml                      # OpenSearch環境
-├── docs/
-│   ├── SPEC.md                      # 要件定義書
-│   ├── architecture.md              # アーキテクチャ
-│   └── class-diagram.md             # クラス図
+├── .github/                         # GitHub Actions ワークフロー
+├── docs/                            # 設計ドキュメント
 ├── src/
 │   ├── main/
 │   │   ├── java/com/kimai07/opensearch/
-│   │   │   ├── OpenSearchSandboxApplication.java
-│   │   │   ├── config/
-│   │   │   │   └── OpenSearchConfig.java
-│   │   │   ├── client/
-│   │   │   │   ├── OpenSearchClientFactory.java  # クライアントファクトリ
-│   │   │   │   ├── SearchClient.java             # 検索インターフェース
-│   │   │   │   ├── OpenSearchSearchClient.java   # 検索実装
-│   │   │   │   ├── IndexClient.java              # インデックスインターフェース
-│   │   │   │   └── OpenSearchIndexClient.java    # インデックス実装
-│   │   │   ├── search/
-│   │   │   │   ├── FullTextSearchService.java
-│   │   │   │   └── VectorSearchService.java
-│   │   │   ├── index/
-│   │   │   │   └── IndexManagementService.java
-│   │   │   └── examples/
-│   │   │       ├── DemoRunner.java
-│   │   │       ├── FullTextSearchDemo.java
-│   │   │       ├── VectorSearchDemo.java
-│   │   │       └── SearchResultPrinter.java
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-│       └── java/com/kimai07/opensearch/
-│           ├── client/
-│           │   └── OpenSearchClientFactoryTest.java
-│           ├── config/
-│           │   └── OpenSearchConfigTest.java
-│           ├── search/
-│           │   └── FullTextSearchServiceTest.java
-│           └── index/
-│               └── IndexManagementServiceTest.java
-└── CLAUDE.md
+│   │   │   ├── config/              # 接続設定（Builder パターン）
+│   │   │   ├── client/              # クライアント層（Factory, Search, Index）
+│   │   │   ├── search/              # 検索サービス（全文検索, ベクトル検索）
+│   │   │   ├── index/               # インデックス管理サービス
+│   │   │   └── examples/            # デモ
+│   │   └── resources/               # 設定ファイル（application.properties）
+│   └── test/java/                   # テストコード（main/java と同一パッケージ構成）
+├── pom.xml                          # Maven設定
+├── compose.yml                      # OpenSearch Docker Compose
+└── CLAUDE.md                        # Claude Code用ガイド
 ```
 
 ## 機能
