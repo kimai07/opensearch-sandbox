@@ -8,8 +8,8 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 
 - **言語**: Java 25
 - **ビルドツール**: Maven
-- **OpenSearch**: 3.3.2（Docker Compose で起動）
-- **クライアント**: opensearch-java 3.3.0
+- **OpenSearch**: 3.9.0（Docker Compose で起動）
+- **クライアント**: opensearch-java 3.10.0
 
 ## 3. 機能要件
 
@@ -42,7 +42,7 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 - 単一ノード構成（開発用）
 
 ### 4.2 テスト
-- JUnit 5 + Mockito + AssertJ によるユニットテスト
+- JUnit 6 + Mockito + AssertJ によるユニットテスト
 - Testcontainers による統合テスト（任意）
 
 ## 5. 想定バージョン
@@ -50,15 +50,15 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 | コンポーネント         | バージョン  |
 |-----------------|--------|
 | Java            | 25     |
-| OpenSearch      | 3.3.2  |
-| opensearch-java | 3.3.0  |
-| httpclient5     | 5.5    |
-| Jackson         | 2.17.0 |
-| SLF4J           | 2.0.12 |
-| Logback         | 1.5.3  |
-| JUnit           | 5.10.2 |
-| AssertJ         | 3.25.3 |
-| Mockito         | 5.14.2 |
+| OpenSearch      | 3.9.0  |
+| opensearch-java | 3.10.0 |
+| httpclient5     | 5.6.5  |
+| Jackson         | 2.22.4 |
+| SLF4J           | 2.0.20 |
+| Logback         | 1.6.6  |
+| JUnit           | 6.1.3  |
+| AssertJ         | 3.27.7 |
+| Mockito         | 5.24.0 |
 | byte-buddy      | 1.15.11 |
 | Maven           | 3.9+   |
 

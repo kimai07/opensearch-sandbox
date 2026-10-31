@@ -10,8 +10,8 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 
 - **Language**: Java 25
 - **Build Tool**: Maven
-- **OpenSearch**: 3.3.2 (Docker Compose)
-- **Client**: opensearch-java 3.3.0
+- **OpenSearch**: 3.9.0 (Docker Compose)
+- **Client**: opensearch-java 3.10.0
 
 ## Development Commands
 
