@@ -1,11 +1,11 @@
 [
-  { "name": "single-term", "q": "BM25" },
-  { "name": "multiple-hits", "q": "OpenSearch" },
-  { "name": "multiple-terms", "q": "vector search" },
-  { "name": "tied-scores", "q": "tiebreak" },
-  { "name": "html-in-content", "q": "sanitizer" },
-  { "name": "no-hits", "q": "nonexistentterm" },
-  { "name": "size-limit", "q": "search", "size": 2 },
-  { "name": "blank-query", "q": " " },
-  { "name": "size-out-of-range", "q": "search", "size": 101 }
+  { "name": "single-term", "endpoint": "/api/v1/articles/search", "q": "BM25" },
+  { "name": "multiple-hits", "endpoint": "/api/v1/articles/search", "q": "OpenSearch" },
+  { "name": "multiple-terms", "endpoint": "/api/v1/articles/search", "q": "vector search" },
+  { "name": "tied-scores", "endpoint": "/api/v1/articles/search", "q": "tiebreak" },
+  { "name": "html-in-content", "endpoint": "/api/v1/articles/search", "q": "sanitizer" },
+  { "name": "no-hits", "endpoint": "/api/v1/articles/search", "q": "nonexistentterm" },
+  { "name": "size-limit", "endpoint": "/api/v1/articles/search", "q": "search", "size": 2 },
+  { "name": "blank-query", "endpoint": "/api/v1/articles/search", "q": " " },
+  { "name": "size-out-of-range", "endpoint": "/api/v1/articles/search", "q": "search", "size": 101 }
 ]
