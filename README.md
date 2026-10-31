@@ -93,7 +93,7 @@ docker compose down -v
 mvn verify -Pregression -Dregression.update=true
 ```
 
-同じテストは GitHub Actions の `Search Regression` ワークフローでも実行されます。対象は `main` への PR と push で、Markdown と `docs/` だけの変更では動きません。手動でも実行できます。
+同じテストは GitHub Actions の `Search Regression` ワークフローでも実行されます。対象は `main` 向けの PR で、Markdown と `docs/` だけの変更では動きません。手動でも実行できます。
 
 ## プロジェクト構成
 
