@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
+import org.mockito.ArgumentCaptor;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class FullTextSearchServiceTest {
@@ -276,6 +279,68 @@ class FullTextSearchServiceTest {
                     String.class);
 
             assertThat(response).isNotNull();
+        }
+    }
+
+    @Nested
+    class MultiMatchWithHighlight {
+        @Test
+        @DisplayName("サイズを指定した場合、リクエストのサイズが指定値であること")
+        void testMultiMatchWithHighlightAppliesSize() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.size()).isEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("同点の順序を固定するため、ソートがスコア降順と指定フィールド昇順の順であること")
+        void testMultiMatchWithHighlightAppliesSort() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.sort()).hasSize(2);
+            assertThat(request.sort().get(0).isScore()).isTrue();
+            assertThat(request.sort().get(0).score().order()).isEqualTo(SortOrder.Desc);
+            assertThat(request.sort().get(1).field().field()).isEqualTo("article_id");
+            assertThat(request.sort().get(1).field().order()).isEqualTo(SortOrder.Asc);
+        }
+
+        @Test
+        @DisplayName("スコアが取得できるよう、リクエストのスコア追跡が有効であること")
+        void testMultiMatchWithHighlightTracksScores() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.trackScores()).isTrue();
+        }
+
+        @Test
+        @DisplayName("複数フィールドを指定した場合、全フィールドがハイライト対象であること")
+        void testMultiMatchWithHighlightAppliesHighlightFields() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.highlight().fields()).containsOnlyKeys("title", "content");
+        }
+
+        @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
+        void testMultiMatchWithHighlightThrowsIOExceptionOnError() throws IOException {
+            when(mockClient.search(any(SearchRequest.class), eq(String.class)))
+                    .thenThrow(new IOException("Connection failed"));
+
+            assertThatThrownBy(() -> service.multiMatchWithHighlight("test-index", List.of("title", "content"),
+                    "search", 5, "article_id", String.class)).isInstanceOf(IOException.class)
+                            .hasMessage("Connection failed");
+        }
+
+        private SearchRequest executeMultiMatchWithHighlight() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            service.multiMatchWithHighlight("test-index", List.of("title", "content"), "search", 5, "article_id",
+                    String.class);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(mockClient).search(captor.capture(), eq(String.class));
+            return captor.getValue();
         }
     }
 

@@ -4,6 +4,7 @@ import com.kimai07.opensearch.client.OpenSearchClientFactory;
 import com.kimai07.opensearch.client.OpenSearchSearchClient;
 import com.kimai07.opensearch.client.SearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
@@ -240,6 +241,53 @@ public class FullTextSearchService {
 
         SearchResponse<T> response = client.search(request, clazz);
         logger.info("Search with highlight returned {} hits", Objects.requireNonNull(response.hits().total()).value());
+        return response;
+    }
+
+    /**
+     * 複数フィールドをハイライト付きで検索する。
+     * <p>
+     * スコアの降順で並べ、同点の場合は指定フィールドの昇順で並べるため、結果の順序は実行ごとに変わりません。
+     * </p>
+     *
+     * @param <T>
+     *            検索結果のドキュメント型
+     * @param indexName
+     *            検索対象のインデックス名
+     * @param fields
+     *            検索およびハイライト対象のフィールド名リスト
+     * @param query
+     *            検索クエリ文字列
+     * @param size
+     *            取得する最大件数
+     * @param tieBreakerField
+     *            同点時の並びに使うフィールド名（keyword など、ソート可能なフィールド）
+     * @param clazz
+     *            結果をマッピングするクラス
+     *
+     * @return 検索結果のSearchResponse（スコアとハイライト情報を含む）
+     *
+     * @throws IOException
+     *             OpenSearch との通信エラーが発生した場合
+     */
+    public <T> SearchResponse<T> multiMatchWithHighlight(String indexName, List<String> fields, String query, int size,
+            String tieBreakerField, Class<T> clazz) throws IOException {
+        logger.info("Executing multi-match with highlight on index: {}, fields: {}, query: {}", indexName, fields,
+                query);
+
+        Highlight.Builder highlight = new Highlight.Builder();
+        fields.forEach(field -> highlight.fields(field,
+                new HighlightField.Builder().preTags("<em>").postTags("</em>").build()));
+
+        SearchRequest request = new SearchRequest.Builder().index(indexName)
+                .query(q -> q.multiMatch(m -> m.fields(fields).query(query))).size(size).trackScores(true)
+                .sort(s -> s.score(o -> o.order(SortOrder.Desc)))
+                .sort(s -> s.field(f -> f.field(tieBreakerField).order(SortOrder.Asc))).highlight(highlight.build())
+                .build();
+
+        SearchResponse<T> response = client.search(request, clazz);
+        logger.info("Multi-match with highlight returned {} hits",
+                Objects.requireNonNull(response.hits().total()).value());
         return response;
     }
 
