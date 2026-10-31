@@ -43,7 +43,7 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 
 ### 4.2 テスト
 - JUnit 6 + Mockito + AssertJ によるユニットテスト
-- Testcontainers による統合テスト（任意）
+- 検索 API のレスポンスを期待値と比較するリグレッションテスト（Docker の OpenSearch に軽量データを投入して実行）
 
 ## 5. 想定バージョン
 
@@ -59,10 +59,31 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 | JUnit           | 6.1.3  |
 | AssertJ         | 3.27.7 |
 | Mockito         | 5.24.0 |
-| byte-buddy      | 1.15.11 |
+| byte-buddy      | 1.18.16 |
 | Maven           | 3.9+   |
 
+`api` モジュールでは Spring Boot 4.1.2 の管理バージョンを使います。Jackson 2 は `opensearch-java` に合わせて 2.22.4 に固定し、Web 層は Jackson 3 を使います。
+
 ## 6. API 仕様
+
+### 検索 API
+
+```
+GET /api/v1/articles/search?q=OpenSearch&size=10
+```
+
+| パラメータ | 必須 | 内容 |
+|---|---|---|
+| `q` | はい | 検索文字列。`title` と `content` を検索する |
+| `size` | いいえ | 取得する最大件数（1〜100、既定値は 10） |
+
+スコアの降順で並べ、同点の場合は `article_id` の昇順で並べます。
+
+| ステータス | 条件 |
+|---|---|
+| 200 | 成功 |
+| 400 | `q` が空、`size` が範囲外または数値でない |
+| 503 | OpenSearch に接続できない、エラーが返った |
 
 ### 6.1 IndexManagementService
 

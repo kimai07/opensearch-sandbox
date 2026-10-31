@@ -29,7 +29,18 @@ mvn test
 mvn formatter:format
 
 # デモ実行
-mvn exec:java
+mvn -pl core compile exec:java
+
+# 検索APIの起動
+mvn -DskipTests package
+java -jar api/target/opensearch-sandbox-api-1.0.0-SNAPSHOT.jar
+
+# リグレッションテスト（OpenSearchの起動が必要）
+docker compose up -d --wait opensearch
+mvn verify -Pregression
+
+# リグレッションテストの期待値を更新
+mvn verify -Pregression -Dregression.update=true
 
 # OpenSearch環境の停止
 docker compose down
@@ -37,8 +48,11 @@ docker compose down
 
 ## Project Structure
 
+`core`（OpenSearchの操作とデモ）と `api`（Spring Bootの検索API）のマルチモジュール構成。
+依存の向きは `api → core` のみで、`core` はSpringに依存しない。
+
 ```
-src/main/java/com/kimai07/opensearch/
+core/src/main/java/com/kimai07/opensearch/
 ├── OpenSearchSandboxApplication.java  # エントリーポイント
 ├── config/
 │   └── OpenSearchConfig.java          # 接続設定（Builder パターン）
@@ -59,7 +73,7 @@ src/main/java/com/kimai07/opensearch/
     ├── VectorSearchDemo.java          # ベクトル検索デモ
     └── SearchResultPrinter.java       # 検索結果表示ユーティリティ
 
-src/test/java/com/kimai07/opensearch/
+core/src/test/java/com/kimai07/opensearch/
 ├── client/
 │   └── OpenSearchClientFactoryTest.java
 ├── config/
@@ -68,7 +82,23 @@ src/test/java/com/kimai07/opensearch/
 │   └── FullTextSearchServiceTest.java
 └── index/
     └── IndexManagementServiceTest.java
+
+api/src/main/java/com/kimai07/opensearch/api/
+├── OpenSearchApiApplication.java      # エントリーポイント
+├── config/                            # 接続設定、Bean定義
+└── search/                            # 検索機能
+    ├── controller/                    # GET /api/v1/articles/search
+    ├── service/
+    ├── repository/                    # interfaceとOpenSearch実装
+    ├── model/
+    ├── dto/
+    └── error/
+
+api/src/test/resources/regression/     # テストケース、期待値、投入データ
 ```
+
+検索対象のデータが増えたら、種類ごとに service と repository を追加する。
+OpenSearch の型は repository の実装に閉じ込め、Jackson 2 の型を Web 層に出さない（`api` の Web 層は Jackson 3）。
 
 ## Key Features
 

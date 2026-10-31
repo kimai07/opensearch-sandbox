@@ -43,8 +43,57 @@ mvn formatter:format
 ### 5. デモの実行
 
 ```bash
-mvn exec:java
+mvn -pl core compile exec:java
 ```
+
+### 6. 検索 API の起動
+
+```bash
+mvn -DskipTests package
+java -jar api/target/opensearch-sandbox-api-1.0.0-SNAPSHOT.jar
+```
+
+```bash
+curl "http://localhost:8080/api/v1/articles/search?q=OpenSearch&size=10"
+```
+
+OpenSearch の接続先は環境変数で指定します。
+
+| 環境変数 | 既定値 |
+|---|---|
+| `OPENSEARCH_HOST` | `localhost` |
+| `OPENSEARCH_PORT` | `9200` |
+| `OPENSEARCH_SCHEME` | `http` |
+| `OPENSEARCH_CONNECTION_TIMEOUT` | `5000` |
+| `OPENSEARCH_SOCKET_TIMEOUT` | `60000` |
+| `OPENSEARCH_INDEX` | `articles` |
+
+### 7. リグレッションテスト
+
+検索 API のレスポンスを期待値と比較します。OpenSearch に軽量データを投入して実行するので、インデックスはテストが作成します。
+
+```bash
+docker compose up -d --wait opensearch
+mvn verify -Pregression
+docker compose down -v
+```
+
+テストケースは `api/src/test/resources/regression/` で管理します。
+
+| ファイル | 内容 |
+|---|---|
+| `cases.json` | テストケース（ケース名とリクエスト） |
+| `golden/<ケース名>.json` | 期待するステータスとボディ |
+| `articles.ndjson` | 投入データ |
+| `mapping.json` | インデックス定義 |
+
+ケースを追加したときや、レスポンスを意図して変更したときは、期待値を更新して差分をレビューします。
+
+```bash
+mvn verify -Pregression -Dregression.update=true
+```
+
+同じテストは GitHub Actions の `Search Regression` ワークフローでも実行されます。対象は `main` への PR と push で、Markdown と `docs/` だけの変更では動きません。手動でも実行できます。
 
 ## プロジェクト構成
 
@@ -52,17 +101,18 @@ mvn exec:java
 opensearch-sandbox/
 ├── .github/                         # GitHub Actions ワークフロー
 ├── docs/                            # 設計ドキュメント
-├── src/
-│   ├── main/
-│   │   ├── java/com/kimai07/opensearch/
-│   │   │   ├── config/              # 接続設定（Builder パターン）
-│   │   │   ├── client/              # クライアント層（Factory, Search, Index）
-│   │   │   ├── search/              # 検索サービス（全文検索, ベクトル検索）
-│   │   │   ├── index/               # インデックス管理サービス
-│   │   │   └── examples/            # デモ
-│   │   └── resources/               # 設定ファイル（application.properties）
-│   └── test/java/                   # テストコード（main/java と同一パッケージ構成）
-├── pom.xml                          # Maven設定
+├── core/                            # OpenSearch の操作とデモ
+│   └── src/main/java/com/kimai07/opensearch/
+│       ├── config/                  # 接続設定（Builder パターン）
+│       ├── client/                  # クライアント層（Factory, Search, Index）
+│       ├── search/                  # 検索サービス（全文検索, ベクトル検索）
+│       ├── index/                   # インデックス管理サービス
+│       └── examples/                # デモ
+├── api/                             # Spring Boot の検索 API
+│   └── src/main/java/com/kimai07/opensearch/api/
+│       ├── config/                  # 接続設定、Bean 定義
+│       └── search/                  # 検索機能（controller, service, repository など）
+├── pom.xml                          # 親 POM
 ├── compose.yml                      # OpenSearch Docker Compose
 └── CLAUDE.md                        # Claude Code用ガイド
 ```

@@ -25,7 +25,7 @@ flowchart TB
 
     subgraph Config["設定"]
         Conf[OpenSearchConfig]
-        Props[application.properties]
+        Props[opensearch.properties]
     end
 
     subgraph Infrastructure["インフラストラクチャ"]
@@ -90,7 +90,33 @@ flowchart LR
     Data --> External
 ```
 
+## モジュール構成
+
+| モジュール | 内容 |
+|---|---|
+| `core` | OpenSearch のクライアント、検索、インデックス管理、デモ。Spring に依存しない |
+| `api` | Spring Boot の検索 API。`core` に依存する |
+
 ## パッケージ構成
+
+### api
+
+```
+com.kimai07.opensearch.api/
+├── OpenSearchApiApplication.java       # エントリーポイント
+├── config/                             # 接続設定、Bean 定義
+└── search/                             # 検索機能
+    ├── controller/                     # リクエストの受け付けと入力検証
+    ├── service/                        # 業務処理
+    ├── repository/                     # 検索の interface と OpenSearch 実装
+    ├── model/                          # 検索条件と検索結果
+    ├── dto/                            # レスポンス
+    └── error/                          # 例外とエラーレスポンス
+```
+
+処理の流れは `controller → service → repository → core` です。検索対象のデータが増えたら、種類ごとに service と repository を追加します。
+
+### core
 
 ```
 com.kimai07.opensearch/
