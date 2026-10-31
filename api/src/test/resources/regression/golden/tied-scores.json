@@ -1,0 +1,25 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "testing",
+      "content" : "Identical text used to verify a stable order for equal scores.",
+      "highlights" : {
+        "title" : [ "<em>Tiebreak</em> Sample" ]
+      },
+      "id" : "19",
+      "score" : 1.1372231,
+      "title" : "Tiebreak Sample"
+    }, {
+      "category" : "testing",
+      "content" : "Identical text used to verify a stable order for equal scores.",
+      "highlights" : {
+        "title" : [ "<em>Tiebreak</em> Sample" ]
+      },
+      "id" : "20",
+      "score" : 1.1372231,
+      "title" : "Tiebreak Sample"
+    } ],
+    "total" : 2
+  },
+  "status" : 200
+}

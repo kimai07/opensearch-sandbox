@@ -1,0 +1,66 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "technology",
+      "content" : "OpenSearch supports k-NN vector search for similarity matching.",
+      "highlights" : {
+        "content" : [ "OpenSearch supports k-NN <em>vector</em> <em>search</em> for similarity matching." ],
+        "title" : [ "<em>Vector</em> <em>Search</em> Basics" ]
+      },
+      "id" : "3",
+      "score" : 1.8444915,
+      "title" : "Vector Search Basics"
+    }, {
+      "category" : "technology",
+      "content" : "Embeddings let vector search find documents by meaning rather than keywords.",
+      "highlights" : {
+        "content" : [ "Embeddings let <em>vector</em> <em>search</em> find documents by meaning rather than keywords." ],
+        "title" : [ "Semantic <em>Search</em> with Embeddings" ]
+      },
+      "id" : "14",
+      "score" : 1.4383392,
+      "title" : "Semantic Search with Embeddings"
+    }, {
+      "category" : "tutorial",
+      "content" : "Highlighting shows users why a document matched their search query.",
+      "highlights" : {
+        "content" : [ "Highlighting shows users why a document matched their <em>search</em> query." ],
+        "title" : [ "Highlighting <em>Search</em> Results" ]
+      },
+      "id" : "9",
+      "score" : 0.62108743,
+      "title" : "Highlighting Search Results"
+    }, {
+      "category" : "tutorial",
+      "content" : "Learn how to implement full-text search with OpenSearch queries.",
+      "highlights" : {
+        "content" : [ "Learn how to implement full-text <em>search</em> with OpenSearch queries." ],
+        "title" : [ "Full-Text <em>Search</em> Guide" ]
+      },
+      "id" : "2",
+      "score" : 0.5484456,
+      "title" : "Full-Text Search Guide"
+    }, {
+      "category" : "operations",
+      "content" : "Add shards and replicas to scale search throughput and availability.",
+      "highlights" : {
+        "content" : [ "Add shards and replicas to scale <em>search</em> throughput and availability." ],
+        "title" : [ "Scaling a <em>Search</em> Cluster" ]
+      },
+      "id" : "7",
+      "score" : 0.5484456,
+      "title" : "Scaling a Search Cluster"
+    }, {
+      "category" : "technology",
+      "content" : "OpenSearch is a powerful open-source search and analytics engine.",
+      "highlights" : {
+        "content" : [ "OpenSearch is a powerful open-source <em>search</em> and analytics engine." ]
+      },
+      "id" : "1",
+      "score" : 0.5319611,
+      "title" : "Introduction to OpenSearch"
+    } ],
+    "total" : 6
+  },
+  "status" : 200
+}

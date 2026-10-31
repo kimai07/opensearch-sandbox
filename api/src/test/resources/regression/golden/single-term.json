@@ -1,0 +1,17 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "tutorial",
+      "content" : "BM25 ranks documents by term frequency and inverse document frequency.",
+      "highlights" : {
+        "content" : [ "<em>BM25</em> ranks documents by term frequency and inverse document frequency." ],
+        "title" : [ "Understanding <em>BM25</em> Scoring" ]
+      },
+      "id" : "5",
+      "score" : 1.223404,
+      "title" : "Understanding BM25 Scoring"
+    } ],
+    "total" : 1
+  },
+  "status" : 200
+}

@@ -1,0 +1,40 @@
+{"index":{"_id":"1"}}
+{"article_id":"a-001","title":"Introduction to OpenSearch","content":"OpenSearch is a powerful open-source search and analytics engine.","category":"technology"}
+{"index":{"_id":"2"}}
+{"article_id":"a-002","title":"Full-Text Search Guide","content":"Learn how to implement full-text search with OpenSearch queries.","category":"tutorial"}
+{"index":{"_id":"3"}}
+{"article_id":"a-003","title":"Vector Search Basics","content":"OpenSearch supports k-NN vector search for similarity matching.","category":"technology"}
+{"index":{"_id":"4"}}
+{"article_id":"a-004","title":"Data Analytics with OpenSearch","content":"Use OpenSearch for powerful data analytics and visualization.","category":"analytics"}
+{"index":{"_id":"5"}}
+{"article_id":"a-005","title":"Understanding BM25 Scoring","content":"BM25 ranks documents by term frequency and inverse document frequency.","category":"tutorial"}
+{"index":{"_id":"6"}}
+{"article_id":"a-006","title":"Index Mapping Best Practices","content":"Define explicit mappings to control how fields are analyzed and stored.","category":"tutorial"}
+{"index":{"_id":"7"}}
+{"article_id":"a-007","title":"Scaling a Search Cluster","content":"Add shards and replicas to scale search throughput and availability.","category":"operations"}
+{"index":{"_id":"8"}}
+{"article_id":"a-008","title":"Monitoring Cluster Health","content":"Track cluster health, heap usage, and slow queries with dashboards.","category":"operations"}
+{"index":{"_id":"9"}}
+{"article_id":"a-009","title":"Highlighting Search Results","content":"Highlighting shows users why a document matched their search query.","category":"tutorial"}
+{"index":{"_id":"10"}}
+{"article_id":"a-010","title":"Fuzzy Matching for Typos","content":"Fuzzy queries tolerate typos by using edit distance.","category":"tutorial"}
+{"index":{"_id":"11"}}
+{"article_id":"a-011","title":"Securing Your Cluster","content":"Enable TLS and role-based access control to protect your data.","category":"operations"}
+{"index":{"_id":"12"}}
+{"article_id":"a-012","title":"Bulk Indexing Performance","content":"Use the bulk API to index many documents efficiently.","category":"operations"}
+{"index":{"_id":"13"}}
+{"article_id":"a-013","title":"Analyzers and Tokenizers","content":"Analyzers split text into tokens before they are stored in the index.","category":"technology"}
+{"index":{"_id":"14"}}
+{"article_id":"a-014","title":"Semantic Search with Embeddings","content":"Embeddings let vector search find documents by meaning rather than keywords.","category":"technology"}
+{"index":{"_id":"15"}}
+{"article_id":"a-015","title":"Log Analytics Pipelines","content":"Ingest application logs and explore them with analytics queries.","category":"analytics"}
+{"index":{"_id":"16"}}
+{"article_id":"a-016","title":"Snapshot and Restore","content":"Snapshots back up indices so you can restore them after a failure.","category":"operations"}
+{"index":{"_id":"17"}}
+{"article_id":"a-017","title":"Aggregations Explained","content":"Aggregations summarize data into metrics and buckets.","category":"analytics"}
+{"index":{"_id":"18"}}
+{"article_id":"a-018","title":"Query Performance Tuning","content":"Avoid leading wildcards and prefer filters for cacheable query clauses.","category":"operations"}
+{"index":{"_id":"20"}}
+{"article_id":"a-020","title":"Tiebreak Sample","content":"Identical text used to verify a stable order for equal scores.","category":"testing"}
+{"index":{"_id":"19"}}
+{"article_id":"a-019","title":"Tiebreak Sample","content":"Identical text used to verify a stable order for equal scores.","category":"testing"}
