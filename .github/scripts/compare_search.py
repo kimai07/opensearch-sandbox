@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+"""2 つの検索 API の jar を起動し、同じリクエストのレスポンスを比較する。
+
+PR が比較の処理を変更できないよう、このスクリプトは main 側のものを実行する。
+差分があれば内容を出力し、終了コード 1 で終了する。
+"""
+import argparse
+import difflib
+import json
+import os
+import pathlib
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+INDEX = "compare-articles"
+BASE_PORT = 18081
+HEAD_PORT = 18082
+SEARCH_PATH = "/api/v1/articles/search"
+STARTUP_TIMEOUT_SECONDS = 90
+
+
+def send(method, url, body=None, content_type="application/json"):
+    headers = {"Content-Type": content_type} if body is not None else {}
+    request = urllib.request.Request(url, data=body, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.status, response.read().decode("utf-8")
+    except urllib.error.HTTPError as error:
+        return error.code, error.read().decode("utf-8")
+
+
+def reset_index(opensearch_url, resources):
+    index_url = f"{opensearch_url}/{INDEX}"
+    send("DELETE", index_url)
+
+    status, text = send("PUT", index_url, (resources / "mapping.json").read_bytes())
+    if status != 200:
+        sys.exit(f"Failed to create index: {status} {text}")
+
+    status, text = send(
+        "POST",
+        f"{index_url}/_bulk?refresh=true",
+        (resources / "articles.ndjson").read_bytes(),
+        "application/x-ndjson",
+    )
+    if status != 200 or json.loads(text)["errors"]:
+        sys.exit(f"Failed to index documents: {status} {text}")
+
+
+def start_app(jar, port, log_path):
+    env = {**os.environ, "OPENSEARCH_INDEX": INDEX}
+    log = log_path.open("w", encoding="utf-8")
+    return subprocess.Popen(
+        ["java", "-jar", str(jar), f"--server.port={port}"],
+        env=env,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+    )
+
+
+def wait_until_ready(process, port, log_path):
+    deadline = time.monotonic() + STARTUP_TIMEOUT_SECONDS
+    url = f"http://localhost:{port}{SEARCH_PATH}?q=ready"
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            sys.exit(f"Application exited early. See {log_path}")
+        try:
+            status, _ = send("GET", url)
+            if status == 200:
+                return
+        except urllib.error.URLError:
+            pass
+        time.sleep(1)
+    sys.exit(f"Application did not become ready. See {log_path}")
+
+
+def fetch(port, case):
+    params = {"q": case["q"]}
+    if "size" in case:
+        params["size"] = case["size"]
+    query = urllib.parse.urlencode(params)
+    status, text = send("GET", f"http://localhost:{port}{SEARCH_PATH}?{query}")
+    snapshot = {"status": status, "body": json.loads(text)}
+    return json.dumps(snapshot, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+
+
+def compare_cases(cases, output_dir):
+    mismatches = []
+    for case in cases:
+        diff = list(
+            difflib.unified_diff(
+                fetch(BASE_PORT, case),
+                fetch(HEAD_PORT, case),
+                fromfile=f"main/{case['name']}",
+                tofile=f"pr/{case['name']}",
+                lineterm="",
+            )
+        )
+        if diff:
+            mismatches.append(case["name"])
+            text = "\n".join(diff)
+            (output_dir / f"{case['name']}.diff").write_text(text + "\n", encoding="utf-8")
+            print(text)
+    return mismatches
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base-jar", required=True, type=pathlib.Path)
+    parser.add_argument("--head-jar", required=True, type=pathlib.Path)
+    parser.add_argument("--resources", required=True, type=pathlib.Path)
+    parser.add_argument("--output-dir", required=True, type=pathlib.Path)
+    parser.add_argument("--opensearch-url", default="http://localhost:9200")
+    args = parser.parse_args()
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    cases = json.loads((args.resources / "cases.json").read_text(encoding="utf-8"))
+    reset_index(args.opensearch_url, args.resources)
+
+    base_log = args.output_dir / "base.log"
+    head_log = args.output_dir / "head.log"
+    base = start_app(args.base_jar, BASE_PORT, base_log)
+    head = start_app(args.head_jar, HEAD_PORT, head_log)
+    try:
+        wait_until_ready(base, BASE_PORT, base_log)
+        wait_until_ready(head, HEAD_PORT, head_log)
+        mismatches = compare_cases(cases, args.output_dir)
+    finally:
+        base.terminate()
+        head.terminate()
+        base.wait()
+        head.wait()
+        send("DELETE", f"{args.opensearch_url}/{INDEX}")
+
+    if mismatches:
+        print(f"Responses differ for {len(mismatches)} of {len(cases)} cases: {', '.join(mismatches)}")
+        return 1
+    print(f"Responses match for all {len(cases)} cases")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

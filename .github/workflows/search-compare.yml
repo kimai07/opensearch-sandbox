@@ -1,0 +1,110 @@
+name: Search Compare
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 比較するPRの番号
+        required: true
+        type: number
+
+concurrency:
+  group: search-compare-${{ inputs.pr_number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  compare:
+    name: Compare main and pull request
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check that the pull request has no conflicts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          mergeable=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json mergeable --jq .mergeable)
+          if [ "$mergeable" = "CONFLICTING" ]; then
+            echo "::error::PR #$PR_NUMBER has conflicts with main. Resolve them and run this workflow again."
+            exit 1
+          fi
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: refs/pull/${{ inputs.pr_number }}/merge
+          path: head
+          persist-credentials: false
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Build main
+        working-directory: base
+        run: mvn -B -DskipTests package
+      - name: Build pull request
+        working-directory: head
+        run: mvn -B -DskipTests package
+      - name: Configure kernel for OpenSearch
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Start OpenSearch
+        run: docker compose -f base/compose.yml up -d --wait opensearch
+      - name: Compare responses
+        run: >-
+          python3 -I base/.github/scripts/compare_search.py
+          --base-jar base/api/target/opensearch-sandbox-api-1.0.0-SNAPSHOT.jar
+          --head-jar head/api/target/opensearch-sandbox-api-1.0.0-SNAPSHOT.jar
+          --resources base/api/src/integration-test/resources/regression
+          --output-dir compare-results
+      - name: Show OpenSearch logs
+        if: failure()
+        run: docker compose -f base/compose.yml logs opensearch
+      - name: Upload comparison results
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: search-compare-results
+          path: compare-results
+      - name: Stop OpenSearch
+        if: always()
+        run: docker compose -f base/compose.yml down -v
+
+  status:
+    name: Report result to pull request
+    needs: compare
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+      statuses: write
+    steps:
+      - name: Write commit status
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          RESULT: ${{ needs.compare.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          sha=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid --jq .headRefOid)
+          if [ "$RESULT" = "success" ]; then
+            state=success
+            description="main と一致"
+          else
+            state=failure
+            description="main と不一致、または実行失敗"
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$sha" \
+            -f state="$state" \
+            -f context=search-compare \
+            -f description="$description" \
+            -f target_url="$RUN_URL"
