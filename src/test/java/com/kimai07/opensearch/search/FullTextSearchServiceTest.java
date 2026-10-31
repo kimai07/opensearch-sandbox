@@ -2,6 +2,7 @@ package com.kimai07.opensearch.search;
 
 import com.kimai07.opensearch.client.SearchClient;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -38,6 +39,7 @@ class FullTextSearchServiceTest {
     @Nested
     class ExtractDocuments {
         @Test
+        @DisplayName("ヒットなしの場合、ドキュメント一覧が空であること")
         void testExtractDocumentsFromEmptyResponse() {
             // 空のレスポンスを作成
             SearchResponse<String> response = createMockSearchResponse(List.of());
@@ -48,6 +50,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("ヒットありの場合、ドキュメント一覧がヒット順であること")
         void testExtractDocumentsFromResponseWithHits() {
             // ヒットありのレスポンスを作成
             List<Hit<String>> hits = List.of(createMockHit("1", "Document 1", 1.0),
@@ -60,6 +63,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("sourceがnullなヒットを含む場合、該当要素がnullであること")
         void testExtractDocumentsWithNullSource() {
             // source が null のヒットを含むレスポンス
             List<Hit<String>> hits = List.of(createMockHit("1", null, 1.0), createMockHit("2", "Document 2", 0.9));
@@ -74,6 +78,7 @@ class FullTextSearchServiceTest {
     @Nested
     class ExtractHighlights {
         @Test
+        @DisplayName("ハイライトありの場合、対象フィールドのハイライトが取得結果であること")
         void testExtractHighlightsFromHit() {
             Map<String, List<String>> highlights = Map.of("content", List.of("<em>OpenSearch</em> is great"));
             Hit<String> hit = createMockHitWithHighlight("1", "content", 1.0, highlights);
@@ -85,6 +90,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("複数フィールドのハイライトの場合、取得結果が全フィールド分であること")
         void testExtractHighlightsWithMultipleFields() {
             Map<String, List<String>> highlights = Map.of("title", List.of("<em>Search</em> Guide"), "content",
                     List.of("<em>Search</em> is powerful", "Learn <em>Search</em>"));
@@ -98,6 +104,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("ハイライトなしの場合、取得結果が空であること")
         void testExtractHighlightsWhenEmpty() {
             Hit<String> hit = createMockHitWithHighlight("1", "content", 1.0, Map.of());
 
@@ -110,6 +117,7 @@ class FullTextSearchServiceTest {
     @Nested
     class MatchQuery {
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testMatchQueryThrowsIOExceptionOnError() throws IOException {
             when(mockClient.search(any(SearchRequest.class), eq(String.class)))
                     .thenThrow(new IOException("Connection failed"));
@@ -119,6 +127,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("ヒットありの場合、レスポンスのヒット数が1件であること")
         void testMatchQueryReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(
                     List.of(createMockHit("1", "Result 1", 1.0)));
@@ -134,6 +143,7 @@ class FullTextSearchServiceTest {
     @Nested
     class BoolQuery {
         @Test
+        @DisplayName("条件がすべてnullな場合、レスポンスがnull以外であること")
         void testBoolQueryWithAllNullConditions() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
             when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
@@ -144,6 +154,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("条件がすべて空な場合、レスポンスがnull以外であること")
         void testBoolQueryWithEmptyConditions() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
             when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
@@ -155,6 +166,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testBoolQueryThrowsIOExceptionOnError() throws IOException {
             when(mockClient.search(any(SearchRequest.class), eq(String.class)))
                     .thenThrow(new IOException("Search failed"));
@@ -169,6 +181,7 @@ class FullTextSearchServiceTest {
     @Nested
     class FuzzyQuery {
         @Test
+        @DisplayName("ヒットありの場合、レスポンスのヒット数が1件であること")
         void testFuzzyQueryReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(
                     List.of(createMockHit("1", "OpenSearch", 0.9)));
@@ -182,6 +195,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testFuzzyQueryThrowsIOExceptionOnError() throws IOException {
             when(mockClient.search(any(SearchRequest.class), eq(String.class)))
                     .thenThrow(new IOException("Fuzzy search failed"));
@@ -194,6 +208,7 @@ class FullTextSearchServiceTest {
     @Nested
     class MultiMatchQuery {
         @Test
+        @DisplayName("複数フィールドを指定した場合、レスポンスがnull以外であること")
         void testMultiMatchQueryReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(List.of(createMockHit("1", "Result", 1.0)));
             when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
@@ -205,6 +220,7 @@ class FullTextSearchServiceTest {
         }
 
         @Test
+        @DisplayName("フィールドが空な場合、レスポンスがnull以外であること")
         void testMultiMatchQueryWithEmptyFields() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
             when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
@@ -218,6 +234,7 @@ class FullTextSearchServiceTest {
     @Nested
     class PhraseMatchQuery {
         @Test
+        @DisplayName("ヒットありの場合、レスポンスがnull以外であること")
         void testPhraseMatchQueryReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(
                     List.of(createMockHit("1", "Exact phrase match", 1.0)));
@@ -233,6 +250,7 @@ class FullTextSearchServiceTest {
     @Nested
     class WildcardQuery {
         @Test
+        @DisplayName("複数ヒットした場合、レスポンスのヒット数が2件であること")
         void testWildcardQueryReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(
                     List.of(createMockHit("1", "Testing", 1.0), createMockHit("2", "Tested", 0.9)));
@@ -248,6 +266,7 @@ class FullTextSearchServiceTest {
     @Nested
     class SearchWithHighlight {
         @Test
+        @DisplayName("ヒットありの場合、レスポンスがnull以外であること")
         void testSearchWithHighlightReturnsResponse() throws IOException {
             SearchResponse<String> mockResponse = createMockSearchResponse(
                     List.of(createMockHit("1", "Result with highlight", 1.0)));

@@ -54,6 +54,9 @@ public interface IndexClient {
      *            確認するインデックス名
      *
      * @return インデックスが存在する場合 true
+     *
+     * @throws IOException
+     *             OpenSearch との通信エラーが発生した場合
      */
     boolean indexExists(String indexName) throws IOException;
 

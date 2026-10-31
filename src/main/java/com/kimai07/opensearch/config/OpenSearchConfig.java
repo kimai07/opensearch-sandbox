@@ -1,5 +1,8 @@
 package com.kimai07.opensearch.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -11,6 +14,8 @@ import java.util.Properties;
  * </p>
  */
 public class OpenSearchConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpenSearchConfig.class);
 
     private final String host;
     private final int port;
@@ -43,20 +48,14 @@ public class OpenSearchConfig {
     /**
      * application.propertiesから設定を読み込んでOpenSearchConfigを作成する。
      * <p>
-     * プロパティファイルが見つからない場合や読み込みに失敗した場合は、 デフォルト値が使用されます。
+     * プロパティファイルが見つからない場合や読み込みに失敗した場合は、 警告をログに出力し、デフォルト値が使用されます。
      * </p>
      *
      * @return application.propertiesの値で初期化されたOpenSearchConfig
      */
     public static OpenSearchConfig fromProperties() {
-        Properties props = new Properties();
-        try (InputStream is = OpenSearchConfig.class.getClassLoader().getResourceAsStream("application.properties")) {
-            if (is != null) {
-                props.load(is);
-            }
-        } catch (IOException _) {
-            // デフォルト値を使用
-        }
+        Properties props = loadProperties(
+                OpenSearchConfig.class.getClassLoader().getResourceAsStream("application.properties"));
 
         return new Builder().host(props.getProperty("opensearch.host", "localhost"))
                 .port(Integer.parseInt(props.getProperty("opensearch.port", "9200")))
@@ -67,6 +66,33 @@ public class OpenSearchConfig {
                 .numberOfReplicas(Integer.parseInt(props.getProperty("opensearch.index.number_of_replicas", "0")))
                 .knnDimension(Integer.parseInt(props.getProperty("opensearch.knn.dimension", "128")))
                 .knnSpaceType(props.getProperty("opensearch.knn.space_type", "l2")).build();
+    }
+
+    /**
+     * ストリームからプロパティを読み込む。
+     * <p>
+     * ストリームがnullの場合や読み込みに失敗した場合は、警告をログに出力して空のプロパティを返します。 途中まで読み込んだ値が混ざらないよう、失敗時は読み込み済みの値も破棄します。
+     * </p>
+     *
+     * @param source
+     *            プロパティのストリーム（呼び出し後にクローズされる）
+     *
+     * @return 読み込んだプロパティ
+     */
+    static Properties loadProperties(InputStream source) {
+        if (source == null) {
+            logger.warn("application.properties not found; using default settings");
+            return new Properties();
+        }
+
+        try (InputStream is = source) {
+            Properties props = new Properties();
+            props.load(is);
+            return props;
+        } catch (IOException e) {
+            logger.warn("Failed to load application.properties; using default settings", e);
+            return new Properties();
+        }
     }
 
     /**

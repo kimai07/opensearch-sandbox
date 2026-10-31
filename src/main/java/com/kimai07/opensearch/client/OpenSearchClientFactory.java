@@ -1,7 +1,8 @@
 package com.kimai07.opensearch.client;
 
 import com.kimai07.opensearch.config.OpenSearchConfig;
-import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.core5.http.HttpHost;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * OpenSearchClientのファクトリクラス。
@@ -30,6 +32,7 @@ public class OpenSearchClientFactory implements Closeable {
     private final OpenSearchConfig config;
     private OpenSearchClient client;
     private org.opensearch.client.transport.OpenSearchTransport transport;
+    private boolean closed;
 
     /**
      * 指定された設定でファクトリを構築する。
@@ -69,8 +72,14 @@ public class OpenSearchClientFactory implements Closeable {
      * </p>
      *
      * @return OpenSearchClient インスタンス
+     *
+     * @throws IllegalStateException
+     *             ファクトリがクローズ済みの場合
      */
     public synchronized OpenSearchClient getClient() {
+        if (closed) {
+            throw new IllegalStateException("OpenSearchClientFactory is already closed");
+        }
         if (client == null) {
             client = createClient();
         }
@@ -96,23 +105,39 @@ public class OpenSearchClientFactory implements Closeable {
 
         HttpHost host = new HttpHost(config.getScheme(), config.getHost(), config.getPort());
 
-        transport = ApacheHttpClient5TransportBuilder.builder(host).setHttpClientConfigCallback(httpClientBuilder -> {
-            configureHttpClient(httpClientBuilder);
-            return httpClientBuilder;
-        }).build();
+        transport = ApacheHttpClient5TransportBuilder.builder(host)
+                .setConnectionConfigCallback(this::configureConnection).setRequestConfigCallback(this::configureRequest)
+                .build();
 
         return new OpenSearchClient(transport);
     }
 
     /**
-     * HTTPクライアントの設定を行う。
+     * 接続タイムアウトとソケットタイムアウトを接続設定に反映する。
      *
-     * @param httpClientBuilder
-     *            設定対象の HttpAsyncClientBuilder
+     * @param builder
+     *            設定対象の ConnectionConfig.Builder
+     *
+     * @return タイムアウトを反映した Builder
      */
-    private void configureHttpClient(HttpAsyncClientBuilder httpClientBuilder) {
-        // 接続設定は HttpAsyncClientBuilder で設定可能
-        // 基本的な設定のみ行い、詳細なタイムアウト設定はリクエストレベルで行う
+    ConnectionConfig.Builder configureConnection(ConnectionConfig.Builder builder) {
+        return builder.setConnectTimeout(config.getConnectionTimeout(), TimeUnit.MILLISECONDS)
+                .setSocketTimeout(config.getSocketTimeout(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * ソケットタイムアウトをレスポンス待ちのタイムアウトに反映する。
+     * <p>
+     * トランスポートの既定値（30秒）を上書きしないと、応答待ちに設定値が適用されません。
+     * </p>
+     *
+     * @param builder
+     *            設定対象の RequestConfig.Builder
+     *
+     * @return タイムアウトを反映した Builder
+     */
+    RequestConfig.Builder configureRequest(RequestConfig.Builder builder) {
+        return builder.setResponseTimeout(config.getSocketTimeout(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -138,17 +163,23 @@ public class OpenSearchClientFactory implements Closeable {
     /**
      * リソースを解放し、接続をクローズする。
      * <p>
-     * このメソッドを呼び出した後は、このファクトリから取得したクライアントは使用できません。
+     * このメソッドを呼び出した後は、このファクトリから取得したクライアントは使用できず、 {@link #getClient()}は例外をスローします。複数回呼び出しても安全です。
      * </p>
      *
      * @throws IOException
      *             クローズ中にエラーが発生した場合
      */
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
+        closed = true;
+        client = null;
         if (transport != null) {
             logger.info("Closing OpenSearch client");
-            transport.close();
+            try {
+                transport.close();
+            } finally {
+                transport = null;
+            }
         }
     }
 }

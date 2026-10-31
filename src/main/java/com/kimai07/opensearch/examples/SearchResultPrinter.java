@@ -62,9 +62,11 @@ public final class SearchResultPrinter {
         logger.info("Found {} nearest neighbors:", Objects.requireNonNull(response.hits().total()).value());
         for (var hit : response.hits().hits()) {
             String title = hit.source() != null && hit.source().has(FIELD_TITLE)
-                    ? hit.source().get(FIELD_TITLE).asText() : "N/A";
+                    ? hit.source().get(FIELD_TITLE).asText()
+                    : "N/A";
             String category = hit.source() != null && hit.source().has("category")
-                    ? hit.source().get("category").asText() : "N/A";
+                    ? hit.source().get("category").asText()
+                    : "N/A";
             logger.info("  - [{}] score={}: {} (category: {})", hit.id(), hit.score(), title, category);
         }
         logger.info("");

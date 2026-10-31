@@ -3,6 +3,7 @@ package com.kimai07.opensearch.index;
 import com.kimai07.opensearch.client.IndexClient;
 import com.kimai07.opensearch.config.OpenSearchConfig;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
 import org.opensearch.client.opensearch._types.mapping.Property;
@@ -39,6 +40,7 @@ class IndexManagementServiceTest {
     @Nested
     class CreateIndex {
         @Test
+        @DisplayName("マッピングなしの場合、マッピングなしで作成され結果がtrueであること")
         void testCreateIndexWithoutMappings() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean())).thenReturn(true);
 
@@ -49,6 +51,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("マッピングありの場合、指定マッピングで作成され結果がtrueであること")
         void testCreateIndexWithMappings() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean())).thenReturn(true);
 
@@ -62,6 +65,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("k-NNが有効な場合、k-NN有効で作成され結果がtrueであること")
         void testCreateIndexWithKnnEnabled() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean())).thenReturn(true);
 
@@ -74,6 +78,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("マッピングが空な場合、作成結果がtrueであること")
         void testCreateIndexWithEmptyMappings() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean())).thenReturn(true);
 
@@ -83,6 +88,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("未承認の場合、作成結果がfalseであること")
         void testCreateIndexNotAcknowledged() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean())).thenReturn(false);
 
@@ -92,6 +98,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testCreateIndexThrowsIOException() throws IOException {
             when(mockClient.createIndex(anyString(), anyInt(), anyInt(), any(), anyBoolean()))
                     .thenThrow(new IOException("Index creation failed"));
@@ -104,6 +111,7 @@ class IndexManagementServiceTest {
     @Nested
     class DeleteIndex {
         @Test
+        @DisplayName("承認済みの場合、削除結果がtrueであること")
         void testDeleteIndexSuccess() throws IOException {
             when(mockClient.deleteIndex(anyString())).thenReturn(true);
 
@@ -114,6 +122,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("未承認の場合、削除結果がfalseであること")
         void testDeleteIndexNotAcknowledged() throws IOException {
             when(mockClient.deleteIndex(anyString())).thenReturn(false);
 
@@ -123,6 +132,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testDeleteIndexThrowsIOException() throws IOException {
             when(mockClient.deleteIndex(anyString())).thenThrow(new IOException("Index deletion failed"));
 
@@ -134,6 +144,7 @@ class IndexManagementServiceTest {
     @Nested
     class IndexExists {
         @Test
+        @DisplayName("インデックスが存在する場合、確認結果がtrueであること")
         void testIndexExistsReturnsTrue() throws IOException {
             when(mockClient.indexExists(anyString())).thenReturn(true);
 
@@ -144,6 +155,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("インデックスが存在しない場合、確認結果がfalseであること")
         void testIndexExistsReturnsFalse() throws IOException {
             when(mockClient.indexExists(anyString())).thenReturn(false);
 
@@ -153,6 +165,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testIndexExistsThrowsIOException() throws IOException {
             when(mockClient.indexExists(anyString())).thenThrow(new IOException("Check failed"));
 
@@ -164,6 +177,7 @@ class IndexManagementServiceTest {
     @Nested
     class PutMapping {
         @Test
+        @DisplayName("承認済みの場合、マッピング更新結果がtrueであること")
         void testPutMappingSuccess() throws IOException {
             when(mockClient.putMapping(anyString(), any())).thenReturn(true);
 
@@ -176,6 +190,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("未承認の場合、マッピング更新結果がfalseであること")
         void testPutMappingNotAcknowledged() throws IOException {
             when(mockClient.putMapping(anyString(), any())).thenReturn(false);
 
@@ -187,6 +202,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testPutMappingThrowsIOException() throws IOException {
             when(mockClient.putMapping(anyString(), any())).thenThrow(new IOException("Mapping update failed"));
 
@@ -200,6 +216,7 @@ class IndexManagementServiceTest {
     @Nested
     class IndexTemplate {
         @Test
+        @DisplayName("承認済みの場合、テンプレート作成結果がtrueであること")
         void testPutIndexTemplateSuccess() throws IOException {
             when(mockClient.putIndexTemplate(anyString(), anyString(), anyInt(), anyInt(), any())).thenReturn(true);
 
@@ -212,6 +229,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("承認済みの場合、テンプレート削除結果がtrueであること")
         void testDeleteIndexTemplateSuccess() throws IOException {
             when(mockClient.deleteIndexTemplate(anyString())).thenReturn(true);
 
@@ -222,6 +240,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("テンプレート作成で通信エラーが発生した場合、例外がIOExceptionであること")
         void testPutIndexTemplateThrowsIOException() throws IOException {
             when(mockClient.putIndexTemplate(anyString(), anyString(), anyInt(), anyInt(), any()))
                     .thenThrow(new IOException("Template creation failed"));
@@ -233,6 +252,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("テンプレート削除で通信エラーが発生した場合、例外がIOExceptionであること")
         void testDeleteIndexTemplateThrowsIOException() throws IOException {
             when(mockClient.deleteIndexTemplate(anyString())).thenThrow(new IOException("Template deletion failed"));
 
@@ -244,6 +264,7 @@ class IndexManagementServiceTest {
     @Nested
     class RefreshIndex {
         @Test
+        @DisplayName("正常な場合、リフレッシュ結果がtrueであること")
         void testRefreshIndexSuccess() throws IOException {
             boolean result = service.refreshIndex("test-index");
 
@@ -252,6 +273,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
         void testRefreshIndexThrowsIOException() throws IOException {
             doThrow(new IOException("Refresh failed")).when(mockClient).refreshIndex(anyString());
 
@@ -263,6 +285,7 @@ class IndexManagementServiceTest {
     @Nested
     class GetIndexInfo {
         @Test
+        @DisplayName("正常な場合、取得結果がクライアントの設定レスポンスであること")
         void testGetIndexSettingsSuccess() throws IOException {
             GetIndicesSettingsResponse mockResponse = mock(GetIndicesSettingsResponse.class);
             when(mockClient.getIndexSettings(anyString())).thenReturn(mockResponse);
@@ -274,6 +297,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("設定取得で通信エラーが発生した場合、例外がIOExceptionであること")
         void testGetIndexSettingsThrowsIOException() throws IOException {
             when(mockClient.getIndexSettings(anyString())).thenThrow(new IOException("Get settings failed"));
 
@@ -282,6 +306,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("正常な場合、取得結果がクライアントのマッピングレスポンスであること")
         void testGetIndexMappingSuccess() throws IOException {
             GetMappingResponse mockResponse = mock(GetMappingResponse.class);
             when(mockClient.getIndexMapping(anyString())).thenReturn(mockResponse);
@@ -293,6 +318,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("マッピング取得で通信エラーが発生した場合、例外がIOExceptionであること")
         void testGetIndexMappingThrowsIOException() throws IOException {
             when(mockClient.getIndexMapping(anyString())).thenThrow(new IOException("Get mapping failed"));
 
@@ -304,6 +330,7 @@ class IndexManagementServiceTest {
     @Nested
     class VectorDocumentRecord {
         @Test
+        @DisplayName("全項目を指定した場合、各項目が指定値であること")
         void testVectorDocumentCreation() {
             float[] vector = { 0.1f, 0.2f, 0.3f };
             Map<String, Object> metadata = Map.of("title", "Test Document");
@@ -317,6 +344,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("メタデータがnullな場合、metadataがnullであること")
         void testVectorDocumentWithNullMetadata() {
             float[] vector = { 0.5f, 0.6f };
 
@@ -328,6 +356,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("ベクトルが空な場合、vectorが空であること")
         void testVectorDocumentWithEmptyVector() {
             float[] emptyVector = {};
             IndexManagementService.VectorDocument doc = new IndexManagementService.VectorDocument("id1", emptyVector,
@@ -337,6 +366,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("メタデータが空な場合、metadataが空であること")
         void testVectorDocumentWithEmptyMetadata() {
             float[] vector = { 0.1f };
             Map<String, Object> emptyMetadata = Map.of();
@@ -348,6 +378,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("IDがnullな場合、idがnullであること")
         void testVectorDocumentWithNullId() {
             float[] vector = { 0.1f, 0.2f };
 
@@ -357,6 +388,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("1024次元のベクトルの場合、全要素が保持された状態であること")
         void testVectorDocumentWithLargeVector() {
             float[] largeVector = new float[1024];
             for (int i = 0; i < largeVector.length; i++) {
@@ -372,6 +404,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("特殊な浮動小数点値の場合、値がそのまま保持された状態であること")
         void testVectorDocumentWithSpecialFloatValues() {
             float[] specialVector = { Float.MAX_VALUE, Float.MIN_VALUE, 0.0f, -0.0f };
 
@@ -382,6 +415,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("ベクトルが別インスタンスな場合、ドキュメントが非等価であること")
         void testVectorDocumentEquality() {
             float[] vector1 = { 0.1f, 0.2f };
             float[] vector2 = { 0.1f, 0.2f };
@@ -398,6 +432,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("ベクトルが同一インスタンスな場合、ドキュメントが等価であること")
         void testVectorDocumentSameInstance() {
             float[] vector = { 0.1f, 0.2f };
             Map<String, Object> metadata = Map.of("key", "value");
@@ -412,6 +447,7 @@ class IndexManagementServiceTest {
         }
 
         @Test
+        @DisplayName("複数の型を含むメタデータの場合、全エントリが保持された状態であること")
         void testVectorDocumentWithComplexMetadata() {
             float[] vector = { 0.1f };
             Map<String, Object> metadata = Map.of("title", "Test", "count", 42, "score", 0.95, "active", true);
