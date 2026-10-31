@@ -236,11 +236,11 @@ class OpenSearchConfigTest {
     @Nested
     class FromProperties {
         @Test
-        @DisplayName("fromPropertiesの接続設定がapplication.propertiesの値であること")
+        @DisplayName("fromPropertiesの接続設定がopensearch.propertiesの値であること")
         void testFromPropertiesLoadsDefaults() {
             OpenSearchConfig config = OpenSearchConfig.fromProperties();
 
-            // application.properties のデフォルト値を確認
+            // opensearch.properties のデフォルト値を確認
             assertThat(config.getHost()).isEqualTo("localhost");
             assertThat(config.getPort()).isEqualTo(9200);
             assertThat(config.getScheme()).isEqualTo("http");

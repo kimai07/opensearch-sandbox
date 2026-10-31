@@ -34,7 +34,7 @@ class OpenSearchClientFactoryTest {
         }
 
         @Test
-        @DisplayName("application.propertiesから生成した場合、設定が取得可能であること")
+        @DisplayName("opensearch.propertiesから生成した場合、設定が取得可能であること")
         void testCreate() throws IOException {
             try (OpenSearchClientFactory factory = OpenSearchClientFactory.create()) {
                 assertThat(factory).isNotNull();
@@ -214,7 +214,7 @@ class OpenSearchClientFactoryTest {
         }
 
         @Test
-        @DisplayName("staticファクトリで生成した場合、設定がapplication.propertiesの値であること")
+        @DisplayName("staticファクトリで生成した場合、設定がopensearch.propertiesの値であること")
         void testGetConfigFromStaticFactoryMethod() throws IOException {
             try (OpenSearchClientFactory factory = OpenSearchClientFactory.create()) {
                 // fromProperties()で作成された設定が返される

@@ -45,7 +45,7 @@ public class OpenSearchClientFactory implements Closeable {
     }
 
     /**
-     * application.propertiesから設定を読み込んでファクトリを作成する。
+     * opensearch.propertiesから設定を読み込んでファクトリを作成する。
      *
      * @return 設定ファイルから初期化された OpenSearchClientFactory
      */

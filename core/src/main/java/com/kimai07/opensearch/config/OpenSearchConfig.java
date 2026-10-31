@@ -10,7 +10,7 @@ import java.util.Properties;
 /**
  * OpenSearch接続設定を管理するクラス。
  * <p>
- * このクラスはイミュータブルであり、Builderパターンを使用して構築します。 application.propertiesから設定を読み込むか、プログラムで直接設定を指定できます。
+ * このクラスはイミュータブルであり、Builderパターンを使用して構築します。 opensearch.propertiesから設定を読み込むか、プログラムで直接設定を指定できます。
  * </p>
  */
 public class OpenSearchConfig {
@@ -46,16 +46,16 @@ public class OpenSearchConfig {
     }
 
     /**
-     * application.propertiesから設定を読み込んでOpenSearchConfigを作成する。
+     * opensearch.propertiesから設定を読み込んでOpenSearchConfigを作成する。
      * <p>
      * プロパティファイルが見つからない場合や読み込みに失敗した場合は、 警告をログに出力し、デフォルト値が使用されます。
      * </p>
      *
-     * @return application.propertiesの値で初期化されたOpenSearchConfig
+     * @return opensearch.propertiesの値で初期化されたOpenSearchConfig
      */
     public static OpenSearchConfig fromProperties() {
         Properties props = loadProperties(
-                OpenSearchConfig.class.getClassLoader().getResourceAsStream("application.properties"));
+                OpenSearchConfig.class.getClassLoader().getResourceAsStream("opensearch.properties"));
 
         return new Builder().host(props.getProperty("opensearch.host", "localhost"))
                 .port(Integer.parseInt(props.getProperty("opensearch.port", "9200")))
@@ -81,7 +81,7 @@ public class OpenSearchConfig {
      */
     static Properties loadProperties(InputStream source) {
         if (source == null) {
-            logger.warn("application.properties not found; using default settings");
+            logger.warn("opensearch.properties not found; using default settings");
             return new Properties();
         }
 
@@ -90,7 +90,7 @@ public class OpenSearchConfig {
             props.load(is);
             return props;
         } catch (IOException e) {
-            logger.warn("Failed to load application.properties; using default settings", e);
+            logger.warn("Failed to load opensearch.properties; using default settings", e);
             return new Properties();
         }
     }
