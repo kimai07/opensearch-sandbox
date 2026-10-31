@@ -45,7 +45,7 @@
                     <configuration>
                         <argLine>
                             -Dnet.bytebuddy.experimental=true
-                            -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${bytebuddy.version}/byte-buddy-agent-${bytebuddy.version}.jar
+                            -javaagent:${net.bytebuddy:byte-buddy-agent:jar}
                             --add-opens java.base/java.lang=ALL-UNNAMED
                             --add-opens java.base/java.lang.reflect=ALL-UNNAMED
                             -XX:+EnableDynamicAgentLoading
@@ -65,6 +65,19 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <!-- 依存jarのパスをプロパティにする（Surefireの-javaagentで使う） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
