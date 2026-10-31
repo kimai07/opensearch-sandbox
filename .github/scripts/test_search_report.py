@@ -148,13 +148,16 @@ class GithubOutputTest(unittest.TestCase):
             output_path = pathlib.Path(directory) / "output"
             env = {"GITHUB_STEP_SUMMARY": str(summary_path), "GITHUB_OUTPUT": str(output_path)}
 
-            search_report.publish("# 表", "1件中 1件一致、0件不一致", env)
+            search_report.publish("# 表", [result(), result("other", matched=False)], env)
 
             self.assertIn("# 表", summary_path.read_text(encoding="utf-8"))
-            self.assertEqual(output_path.read_text(encoding="utf-8"), "summary=1件中 1件一致、0件不一致\n")
+            self.assertEqual(
+                output_path.read_text(encoding="utf-8"),
+                "summary=2件中 1件一致、1件不一致: other\ncounts=2件中 1件一致、1件不一致\nmismatches=other\n",
+            )
 
     def test_skips_files_outside_github_actions(self):
-        search_report.publish("# 表", "1件中 1件一致、0件不一致", {})
+        search_report.publish("# 表", [result()], {})
 
 
 if __name__ == "__main__":

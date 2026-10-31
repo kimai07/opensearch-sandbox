@@ -97,12 +97,12 @@ mvn verify -Pregression -Dregression.update=true
 
 どちらのワークフローも手動で実行します。Actions 画面の「Run workflow」か、`gh` から実行できます。PR 番号を指定すると、ワークフロー内で最新の `main` に PR をマージした状態をテストします。実際の `main` は変更しません。
 
-結果は実行画面の Job Summary に、ケースごとの表と `9件中 9件一致、0件不一致` の形式で表示します。`search-compare` の不一致は ❌ で示し、差分は Job Summary と、アーティファクト `search-compare-results` の `<ケース名>.diff` で確認できます。
+結果は実行画面の Job Summary に、ケースごとの表と `9件中 9件一致、0件不一致` の形式で表示します。`search-compare` の不一致は ❌ で示し、差分は Job Summary と、アーティファクト `search-compare-results` の `<ケース名>.diff` で確認できます。PR のコメントは 1 件だけで、実行のたびに最新の結果で更新します。
 
 | ワークフロー | 内容 | PR 番号 |
 |---|---|---|
 | `search-regression.yml` | 期待値の JSON と比較する | 任意（空の場合は `main`） |
-| `search-compare.yml` | `main` と PR のレスポンスを比較し、結果を PR のステータス `search-compare` に表示する | 必須 |
+| `search-compare.yml` | `main` と PR のレスポンスを比較し、結果を PR のステータス `search-compare` とコメントに表示する | 必須 |
 
 ```bash
 gh workflow run search-regression.yml -f pr_number=123

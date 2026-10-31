@@ -150,9 +150,7 @@ def main():
 
     print(search_report.summary_line(results))
     print(search_report.mismatch_line(results))
-    search_report.publish(
-        search_report.render_compare_markdown(results), search_report.status_description(results), os.environ
-    )
+    search_report.publish(search_report.render_compare_markdown(results), results, os.environ)
     return 1 if search_report.mismatched_names(results) else 0
 
 

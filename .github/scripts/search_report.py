@@ -118,7 +118,7 @@ def read_regression_results(report_path, cases):
     ]
 
 
-def publish(markdown, summary, env):
+def publish(markdown, results, env):
     """Job Summary と、後続のジョブが読む出力に書き込む。GitHub Actions の外では何もしない。"""
     summary_path = env.get("GITHUB_STEP_SUMMARY")
     if summary_path:
@@ -128,4 +128,6 @@ def publish(markdown, summary, env):
     output_path = env.get("GITHUB_OUTPUT")
     if output_path:
         with open(output_path, "a", encoding="utf-8") as file:
-            file.write(f"summary={summary}\n")
+            file.write(f"summary={status_description(results)}\n")
+            file.write(f"counts={summary_line(results)}\n")
+            file.write(f"mismatches={','.join(mismatched_names(results))}\n")

@@ -23,9 +23,7 @@ def main():
     results = search_report.read_regression_results(args.report, cases)
     print(search_report.summary_line(results))
     print(search_report.mismatch_line(results))
-    search_report.publish(
-        search_report.render_regression_markdown(results), search_report.status_description(results), os.environ
-    )
+    search_report.publish(search_report.render_regression_markdown(results), results, os.environ)
     return 0
 
 
