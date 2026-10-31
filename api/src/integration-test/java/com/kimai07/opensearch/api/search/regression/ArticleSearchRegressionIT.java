@@ -120,7 +120,7 @@ class ArticleSearchRegressionIT {
     }
 
     private String fetch(RegressionCase regressionCase) throws IOException, InterruptedException {
-        URI uri = URI.create("http://localhost:" + port + "/api/v1/articles/search?" + regressionCase.toQueryString());
+        URI uri = URI.create("http://localhost:" + port + regressionCase.toPathAndQuery());
         HttpRequest request = HttpRequest.newBuilder(uri).GET().build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 

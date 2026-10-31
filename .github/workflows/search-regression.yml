@@ -55,6 +55,8 @@ jobs:
           python3 tools/.github/scripts/summarize_regression.py
           --report target/api/target/failsafe-reports/TEST-com.kimai07.opensearch.api.search.regression.ArticleSearchRegressionIT.xml
           --cases target/api/src/integration-test/resources/regression/cases.json
+          --environment docker
+          --host localhost:9200
       - name: Show OpenSearch logs
         if: failure()
         run: docker compose -f target/compose.yml logs opensearch

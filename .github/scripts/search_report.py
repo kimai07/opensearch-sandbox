@@ -6,6 +6,7 @@ MATCH = "✅"
 MISMATCH = "❌"
 STATUS_DESCRIPTION_LIMIT = 140
 CASE_NAME_INDEX = re.compile(r"\[(\d+)]$")
+DEFAULT_ENDPOINT = "/api/v1/articles/search"
 
 
 def summary_line(results):
@@ -46,24 +47,53 @@ def mismatch_line(results):
     return f"不一致のケース: {', '.join(mismatched_names(results)) or 'なし'}"
 
 
-def render_compare_markdown(results):
-    lines = [
-        "## main と PR のレスポンス比較",
+def group_by_endpoint(results):
+    groups = {}
+    for result in results:
+        groups.setdefault(result["endpoint"], []).append(result)
+    return groups
+
+
+def render_overview(title, environment, host, results):
+    return [
+        title,
         "",
-        f"**{summary_line(results)}**",
+        f"環境: {environment} / ホスト: {host}",
+        "",
+        f"**全体: {summary_line(results)}**",
         "",
         mismatch_line(results),
-        "",
+    ]
+
+
+def render_endpoint_tables(results, header, render_row):
+    lines = []
+    for endpoint, group in group_by_endpoint(results).items():
+        lines += ["", f"### `GET {endpoint}`", "", summary_line(group), "", *header]
+        lines += [render_row(result) for result in group]
+    return lines
+
+
+def render_compare_row(result):
+    return (
+        f"| {result['name']} | {format_query(result['q'])} | {format_value(result['size'])} "
+        f"| {format_value(result['base_status'])} | {format_value(result['head_status'])} "
+        f"| {format_value(result['base_hits'])} | {format_value(result['head_hits'])} "
+        f"| {match_mark(result)} |"
+    )
+
+
+def render_regression_row(result):
+    return f"| {result['name']} | {format_query(result['q'])} | {format_value(result['size'])} | {match_mark(result)} |"
+
+
+def render_compare_markdown(results, environment, host):
+    header = [
         "| ケース | 検索文字列 | size | ステータス（main） | ステータス（PR） | ヒット件数（main） | ヒット件数（PR） | レスポンス一致 |",
         "|---|---|---|---|---|---|---|---|",
     ]
-    for result in results:
-        lines.append(
-            f"| {result['name']} | {format_query(result['q'])} | {format_value(result['size'])} "
-            f"| {format_value(result['base_status'])} | {format_value(result['head_status'])} "
-            f"| {format_value(result['base_hits'])} | {format_value(result['head_hits'])} "
-            f"| {match_mark(result)} |"
-        )
+    lines = render_overview("## main と PR のレスポンス比較", environment, host, results)
+    lines += render_endpoint_tables(results, header, render_compare_row)
 
     for result in results:
         if not result["matched"]:
@@ -80,22 +110,10 @@ def render_compare_markdown(results):
     return "\n".join(lines) + "\n"
 
 
-def render_regression_markdown(results):
-    lines = [
-        "## 期待値との比較",
-        "",
-        f"**{summary_line(results)}**",
-        "",
-        mismatch_line(results),
-        "",
-        "| ケース | 検索文字列 | size | 期待値との一致 |",
-        "|---|---|---|---|",
-    ]
-    for result in results:
-        lines.append(
-            f"| {result['name']} | {format_query(result['q'])} | {format_value(result['size'])} "
-            f"| {match_mark(result)} |"
-        )
+def render_regression_markdown(results, environment, host):
+    header = ["| ケース | 検索文字列 | size | 期待値との一致 |", "|---|---|---|---|"]
+    lines = render_overview("## 期待値との比較", environment, host, results)
+    lines += render_endpoint_tables(results, header, render_regression_row)
     return "\n".join(lines) + "\n"
 
 
@@ -113,7 +131,13 @@ def read_regression_results(report_path, cases):
             passed[int(index.group(1))] = not failed
 
     return [
-        {"name": case["name"], "q": case["q"], "size": case.get("size"), "matched": passed.get(number, False)}
+        {
+            "name": case["name"],
+            "endpoint": case.get("endpoint", DEFAULT_ENDPOINT),
+            "q": case["q"],
+            "size": case.get("size"),
+            "matched": passed.get(number, False),
+        }
         for number, case in enumerate(cases, start=1)
     ]
 

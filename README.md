@@ -97,7 +97,7 @@ mvn verify -Pregression -Dregression.update=true
 
 どちらのワークフローも手動で実行します。Actions 画面の「Run workflow」か、`gh` から実行できます。PR 番号を指定すると、ワークフロー内で最新の `main` に PR をマージした状態をテストします。実際の `main` は変更しません。
 
-結果は実行画面の Job Summary に、ケースごとの表と `9件中 9件一致、0件不一致` の形式で表示します。`search-compare` の不一致は ❌ で示し、差分は Job Summary と、アーティファクト `search-compare-results` の `<ケース名>.diff` で確認できます。PR のコメントは 1 件だけで、実行のたびに最新の結果で更新します。
+結果は実行画面の Job Summary に、`9件中 9件一致、0件不一致` の形式の集計と、ケースごとの表で表示します。環境とホストは先頭に 1 か所だけ表示し、表はエンドポイントごとに分かれます。エンドポイントは `cases.json` の `endpoint` で指定します。`search-compare` の不一致は ❌ で示し、差分は Job Summary と、アーティファクト `search-compare-results` の `<ケース名>.diff` で確認できます。PR のコメントは 1 件だけで、実行のたびに最新の結果で更新します。
 
 | ワークフロー | 内容 | PR 番号 |
 |---|---|---|

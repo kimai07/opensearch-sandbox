@@ -21,7 +21,6 @@ import search_report
 INDEX = "compare-articles"
 BASE_PORT = 18081
 HEAD_PORT = 18082
-SEARCH_PATH = "/api/v1/articles/search"
 STARTUP_TIMEOUT_SECONDS = 90
 
 
@@ -66,7 +65,7 @@ def start_app(jar, port, log_path):
 
 def wait_until_ready(process, port, log_path):
     deadline = time.monotonic() + STARTUP_TIMEOUT_SECONDS
-    url = f"http://localhost:{port}{SEARCH_PATH}?q=ready"
+    url = f"http://localhost:{port}{search_report.DEFAULT_ENDPOINT}?q=ready"
     while time.monotonic() < deadline:
         if process.poll() is not None:
             sys.exit(f"Application exited early. See {log_path}")
@@ -80,12 +79,12 @@ def wait_until_ready(process, port, log_path):
     sys.exit(f"Application did not become ready. See {log_path}")
 
 
-def fetch(port, case):
+def fetch(port, endpoint, case):
     params = {"q": case["q"]}
     if "size" in case:
         params["size"] = case["size"]
     query = urllib.parse.urlencode(params)
-    status, text = send("GET", f"http://localhost:{port}{SEARCH_PATH}?{query}")
+    status, text = send("GET", f"http://localhost:{port}{endpoint}?{query}")
     body = json.loads(text)
     snapshot = {"status": status, "body": body}
     lines = json.dumps(snapshot, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
@@ -93,8 +92,9 @@ def fetch(port, case):
 
 
 def compare_case(case, output_dir):
-    base = fetch(BASE_PORT, case)
-    head = fetch(HEAD_PORT, case)
+    endpoint = case.get("endpoint", search_report.DEFAULT_ENDPOINT)
+    base = fetch(BASE_PORT, endpoint, case)
+    head = fetch(HEAD_PORT, endpoint, case)
     diff = "\n".join(
         difflib.unified_diff(
             base["lines"],
@@ -109,6 +109,7 @@ def compare_case(case, output_dir):
         print(diff)
     return {
         "name": case["name"],
+        "endpoint": endpoint,
         "q": case["q"],
         "size": case.get("size"),
         "base_status": base["status"],
@@ -127,6 +128,7 @@ def main():
     parser.add_argument("--resources", required=True, type=pathlib.Path)
     parser.add_argument("--output-dir", required=True, type=pathlib.Path)
     parser.add_argument("--opensearch-url", default="http://localhost:9200")
+    parser.add_argument("--environment", default="docker")
     args = parser.parse_args()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -150,7 +152,9 @@ def main():
 
     print(search_report.summary_line(results))
     print(search_report.mismatch_line(results))
-    search_report.publish(search_report.render_compare_markdown(results), results, os.environ)
+    host = urllib.parse.urlparse(args.opensearch_url).netloc
+    markdown = search_report.render_compare_markdown(results, args.environment, host)
+    search_report.publish(markdown, results, os.environ)
     return 1 if search_report.mismatched_names(results) else 0
 
 

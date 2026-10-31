@@ -73,6 +73,7 @@ jobs:
           --head-jar head/api/target/opensearch-sandbox-api-1.0.0-SNAPSHOT.jar
           --resources base/api/src/integration-test/resources/regression
           --output-dir compare-results
+          --environment docker
       - name: Show OpenSearch logs
         if: failure()
         run: docker compose -f base/compose.yml logs opensearch
