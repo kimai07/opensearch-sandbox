@@ -4,6 +4,12 @@
 
 ```mermaid
 flowchart TB
+    subgraph Api["検索 API"]
+        Controller[ArticleSearchController]
+        ApiService[ArticleSearchService]
+        Repository[ArticleSearchRepository]
+    end
+
     subgraph Client["クライアントアプリケーション"]
         App[OpenSearchSandboxApplication]
         Demo[DemoRunner]
@@ -34,6 +40,10 @@ flowchart TB
             Dashboard[OpenSearch Dashboards<br/>:5601]
         end
     end
+
+    Controller --> ApiService
+    ApiService --> Repository
+    Repository --> FTS
 
     App --> Demo
     Demo --> FTS

@@ -10,6 +10,7 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 - **ビルドツール**: Maven
 - **OpenSearch**: 3.9.0（Docker Compose で起動）
 - **クライアント**: opensearch-java 3.10.0
+- **API**: Spring Boot 4.1.2
 
 ## 3. 機能要件
 
@@ -34,6 +35,11 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 - インデックステンプレートの作成・削除
 - インデックス設定の取得
 - インデックスのリフレッシュ
+
+### 3.4 検索 API
+- タイトルと本文を対象にした記事の全文検索
+- ハイライト付きのレスポンス（本文の HTML はエスケープする）
+- OpenSearch の接続先を環境変数で切り替え
 
 ## 4. 非機能要件
 
@@ -113,6 +119,7 @@ GET /api/v1/articles/search?q=OpenSearch&size=10
 | `phraseMatchQuery(String indexName, String field, String phrase, Class<T> clazz)` | フレーズ一致検索 |
 | `wildcardQuery(String indexName, String field, String pattern, Class<T> clazz)` | ワイルドカード検索 |
 | `searchWithHighlight(String indexName, String field, String query, Class<T> clazz)` | ハイライト付きで検索 |
+| `multiMatchWithHighlight(String indexName, List<String> fields, String query, int size, String tieBreakerField, Class<T> clazz)` | 複数フィールドをハイライト付きで検索。同点時の順序を固定する |
 | `extractDocuments(SearchResponse<T> response)` | レスポンスからドキュメントを抽出 |
 | `extractHighlights(Hit<T> hit)` | ヒットからハイライト情報を抽出 |
 

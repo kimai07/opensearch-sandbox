@@ -93,7 +93,29 @@ docker compose down -v
 mvn verify -Pregression -Dregression.update=true
 ```
 
-同じテストは GitHub Actions の `Search Regression` ワークフローでも実行されます。対象は `main` 向けの PR で、Markdown と `docs/` だけの変更では動きません。手動でも実行できます。
+### 8. GitHub Actions でのテスト
+
+どちらのワークフローも手動で実行します。Actions 画面の「Run workflow」か、`gh` から実行できます。テストの対象は、PR をマージする前の一時的なマージ結果です。
+
+| ワークフロー | 内容 | PR 番号 |
+|---|---|---|
+| `search-regression.yml` | 期待値の JSON と比較する | 任意（空の場合は `main`） |
+| `search-compare.yml` | `main` と PR のレスポンスを比較し、結果を PR のステータス `search-compare` に表示する | 必須 |
+
+```bash
+gh workflow run search-regression.yml -f pr_number=123
+gh workflow run search-compare.yml -f pr_number=123
+```
+
+`search-compare` が失敗した場合は、差分を確認してください。原則マージせず、仕様変更と判断した場合のみ人がマージします。
+
+Dependabot は週 1 回、更新の PR を作成します。
+
+| PR の種類 | 確認方法 |
+|---|---|
+| Maven | `search-compare` |
+| Docker イメージ | `search-regression` |
+| GitHub Actions | 差分のレビューと、`--ref` で PR のブランチを指定した手動実行 |
 
 ## プロジェクト構成
 
@@ -118,6 +140,10 @@ opensearch-sandbox/
 ```
 
 ## 機能
+
+### 検索 API
+
+- **記事検索**: `GET /api/v1/articles/search`（タイトルと本文の全文検索、ハイライト付き）
 
 ### 全文検索・クエリ
 
@@ -148,6 +174,7 @@ opensearch-sandbox/
 
 - **OpenSearch**: http://localhost:9200
 - **OpenSearch Dashboards**: http://localhost:5601
+- **検索 API**: http://localhost:8080
 
 ## 停止
 

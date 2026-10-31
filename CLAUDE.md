@@ -12,6 +12,7 @@ OpenSearchの各種機能を検証・学習するためのサンドボックス�
 - **Build Tool**: Maven
 - **OpenSearch**: 3.9.0 (Docker Compose)
 - **Client**: opensearch-java 3.10.0
+- **API**: Spring Boot 4.1.2
 
 ## Development Commands
 
@@ -108,6 +109,14 @@ OpenSearch の型は repository の実装に閉じ込め、Jackson 2 の型を W
 1. **全文検索**: Match Query, Multi Match Query, Bool Query, Fuzzy Query, Phrase Match Query, Wildcard Query, Highlight
 2. **ベクトル検索(k-NN)**: k-NN Index作成、ベクトル一括登録、類似検索、フィルタ付きk-NN検索
 3. **インデックス管理**: 作成・削除、マッピング設定・取得、インデックステンプレート、リフレッシュ、設定取得
+4. **検索API**: `GET /api/v1/articles/search`（OpenSearchの接続先は環境変数で切り替え）
+
+## CI
+
+ワークフローはすべて手動実行で、`main` へのpushやPRでは自動実行しない。
+
+- `search-regression.yml`: 期待値のJSONと比較する（PR番号は任意、空の場合は`main`）
+- `search-compare.yml`: `main`とPRのレスポンスを比較し、結果をPRのステータスに表示する
 
 ## Access URLs
 
