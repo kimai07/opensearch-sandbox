@@ -17,30 +17,53 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7.0.1
+      - name: Check out scripts
+        uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ inputs.pr_number && format('refs/pull/{0}/merge', inputs.pr_number) || 'main' }}
+          path: tools
           persist-credentials: false
+      - name: Check out main
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Merge pull request into main
+        if: inputs.pr_number
+        working-directory: target
+        env:
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: bash ../tools/.github/scripts/merge_pull_request.sh "$PR_NUMBER"
       - uses: actions/setup-java@v6.1.0
         with:
           distribution: temurin
           java-version: "25"
           cache: maven
+          cache-dependency-path: target/**/pom.xml
       - name: Configure kernel for OpenSearch
         run: sudo sysctl -w vm.max_map_count=262144
       - name: Start OpenSearch
-        run: docker compose up -d --wait opensearch
+        run: docker compose -f target/compose.yml up -d --wait opensearch
       - name: Run tests and regression comparison
+        id: tests
+        working-directory: target
         run: mvn -B verify -Pregression
+      - name: Summarize regression results
+        if: always() && steps.tests.outcome != 'skipped'
+        run: >-
+          python3 tools/.github/scripts/summarize_regression.py
+          --report target/api/target/failsafe-reports/TEST-com.kimai07.opensearch.api.search.regression.ArticleSearchRegressionIT.xml
+          --cases target/api/src/integration-test/resources/regression/cases.json
       - name: Show OpenSearch logs
         if: failure()
-        run: docker compose logs opensearch
+        run: docker compose -f target/compose.yml logs opensearch
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7.0.2
         with:
           name: regression-reports
-          path: api/target/failsafe-reports
+          path: target/api/target/failsafe-reports
       - name: Stop OpenSearch
         if: always()
-        run: docker compose down -v
+        run: docker compose -f target/compose.yml down -v

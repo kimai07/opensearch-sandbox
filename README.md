@@ -95,7 +95,9 @@ mvn verify -Pregression -Dregression.update=true
 
 ### 8. GitHub Actions でのテスト
 
-どちらのワークフローも手動で実行します。Actions 画面の「Run workflow」か、`gh` から実行できます。テストの対象は、PR をマージする前の一時的なマージ結果です。
+どちらのワークフローも手動で実行します。Actions 画面の「Run workflow」か、`gh` から実行できます。PR 番号を指定すると、ワークフロー内で最新の `main` に PR をマージした状態をテストします。実際の `main` は変更しません。
+
+結果は実行画面の Job Summary に、ケースごとの表と `9件中 9件一致、0件不一致` の形式で表示します。`search-compare` の不一致は ❌ で示し、差分は Job Summary と、アーティファクト `search-compare-results` の `<ケース名>.diff` で確認できます。
 
 | ワークフロー | 内容 | PR 番号 |
 |---|---|---|

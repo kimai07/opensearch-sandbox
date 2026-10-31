@@ -29,6 +29,7 @@ replay_pid*
 
 # Build output
 target/
+__pycache__/
 
 # Working notes
 _work/

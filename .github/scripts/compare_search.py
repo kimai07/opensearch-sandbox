@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """2 つの検索 API の jar を起動し、同じリクエストのレスポンスを比較する。
 
-PR が比較の処理を変更できないよう、このスクリプトは main 側のものを実行する。
-差分があれば内容を出力し、終了コード 1 で終了する。
+PR が比較の処理を変更できないよう、このスクリプトは PR のコードとは別のチェックアウトから実行する。
+結果を Job Summary に出力し、不一致があれば終了コード 1 で終了する。
 """
 import argparse
 import difflib
@@ -15,6 +15,8 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+import search_report
 
 INDEX = "compare-articles"
 BASE_PORT = 18081
@@ -84,28 +86,38 @@ def fetch(port, case):
         params["size"] = case["size"]
     query = urllib.parse.urlencode(params)
     status, text = send("GET", f"http://localhost:{port}{SEARCH_PATH}?{query}")
-    snapshot = {"status": status, "body": json.loads(text)}
-    return json.dumps(snapshot, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+    body = json.loads(text)
+    snapshot = {"status": status, "body": body}
+    lines = json.dumps(snapshot, indent=2, sort_keys=True, ensure_ascii=False).splitlines()
+    return {"status": status, "hits": body.get("total"), "lines": lines}
 
 
-def compare_cases(cases, output_dir):
-    mismatches = []
-    for case in cases:
-        diff = list(
-            difflib.unified_diff(
-                fetch(BASE_PORT, case),
-                fetch(HEAD_PORT, case),
-                fromfile=f"main/{case['name']}",
-                tofile=f"pr/{case['name']}",
-                lineterm="",
-            )
+def compare_case(case, output_dir):
+    base = fetch(BASE_PORT, case)
+    head = fetch(HEAD_PORT, case)
+    diff = "\n".join(
+        difflib.unified_diff(
+            base["lines"],
+            head["lines"],
+            fromfile=f"main/{case['name']}",
+            tofile=f"pr/{case['name']}",
+            lineterm="",
         )
-        if diff:
-            mismatches.append(case["name"])
-            text = "\n".join(diff)
-            (output_dir / f"{case['name']}.diff").write_text(text + "\n", encoding="utf-8")
-            print(text)
-    return mismatches
+    )
+    if diff:
+        (output_dir / f"{case['name']}.diff").write_text(diff + "\n", encoding="utf-8")
+        print(diff)
+    return {
+        "name": case["name"],
+        "q": case["q"],
+        "size": case.get("size"),
+        "base_status": base["status"],
+        "head_status": head["status"],
+        "base_hits": base["hits"],
+        "head_hits": head["hits"],
+        "matched": not diff,
+        "diff": diff,
+    }
 
 
 def main():
@@ -128,7 +140,7 @@ def main():
     try:
         wait_until_ready(base, BASE_PORT, base_log)
         wait_until_ready(head, HEAD_PORT, head_log)
-        mismatches = compare_cases(cases, args.output_dir)
+        results = [compare_case(case, args.output_dir) for case in cases]
     finally:
         base.terminate()
         head.terminate()
@@ -136,11 +148,12 @@ def main():
         head.wait()
         send("DELETE", f"{args.opensearch_url}/{INDEX}")
 
-    if mismatches:
-        print(f"Responses differ for {len(mismatches)} of {len(cases)} cases: {', '.join(mismatches)}")
-        return 1
-    print(f"Responses match for all {len(cases)} cases")
-    return 0
+    print(search_report.summary_line(results))
+    print(search_report.mismatch_line(results))
+    search_report.publish(
+        search_report.render_compare_markdown(results), search_report.status_description(results), os.environ
+    )
+    return 1 if search_report.mismatched_names(results) else 0
 
 
 if __name__ == "__main__":
