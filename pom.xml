@@ -7,139 +7,81 @@
     <groupId>com.example</groupId>
     <artifactId>opensearch-sandbox</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>OpenSearch Sandbox</name>
     <description>OpenSearchの各種機能を検証・学習するためのサンドボックスプロジェクト</description>
+
+    <modules>
+        <module>core</module>
+        <module>api</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <opensearch.client.version>3.10.0</opensearch.client.version>
-        <jackson.version>2.22.4</jackson.version>
-        <slf4j.version>2.0.20</slf4j.version>
-        <logback.version>1.6.6</logback.version>
-        <junit.version>6.1.3</junit.version>
-        <mockito.version>5.24.0</mockito.version>
         <bytebuddy.version>1.18.16</bytebuddy.version>
+        <maven.test.plugin.version>3.6.1</maven.test.plugin.version>
     </properties>
 
-    <dependencies>
-        <!-- OpenSearch Java Client -->
-        <dependency>
-            <groupId>org.opensearch.client</groupId>
-            <artifactId>opensearch-java</artifactId>
-            <version>${opensearch.client.version}</version>
-        </dependency>
-
-        <!-- Apache HttpClient 5 (OpenSearch client transport) -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.6.5</version>
-        </dependency>
-
-        <!-- Jackson for JSON processing -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-
-        <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>3.27.7</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${bytebuddy.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy-agent</artifactId>
-            <version>${bytebuddy.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.16.0</version>
+                    <configuration>
+                        <source>25</source>
+                        <target>25</target>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.test.plugin.version}</version>
+                    <configuration>
+                        <argLine>
+                            -Dnet.bytebuddy.experimental=true
+                            -javaagent:${net.bytebuddy:byte-buddy-agent:jar}
+                            --add-opens java.base/java.lang=ALL-UNNAMED
+                            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                            -XX:+EnableDynamicAgentLoading
+                        </argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven.test.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.6.4</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
+            <!-- 依存jarのパスをプロパティにする（Surefireの-javaagentで使う） -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.16.0</version>
-                <configuration>
-                    <source>25</source>
-                    <target>25</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.6.1</version>
-                <configuration>
-                    <argLine>
-                        -Dnet.bytebuddy.experimental=true
-                        -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${bytebuddy.version}/byte-buddy-agent-${bytebuddy.version}.jar
-                        --add-opens java.base/java.lang=ALL-UNNAMED
-                        --add-opens java.base/java.lang.reflect=ALL-UNNAMED
-                        -XX:+EnableDynamicAgentLoading
-                    </argLine>
-                </configuration>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.11.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
                 <version>2.29.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.4</version>
-                <configuration>
-                    <mainClass>com.kimai07.opensearch.examples.DemoRunner</mainClass>
-                </configuration>
             </plugin>
         </plugins>
     </build>

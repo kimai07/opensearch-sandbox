@@ -1,0 +1,16 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "testing",
+      "content" : "A sanitizer removes <script>alert(1)</script> from markup.",
+      "highlights" : {
+        "content" : [ "A <em>sanitizer</em> removes &lt;script&gt;alert(1)&lt;&#x2F;script&gt; from markup." ]
+      },
+      "id" : "21",
+      "score" : 1.2681047,
+      "title" : "Escaping Markup"
+    } ],
+    "total" : 1
+  },
+  "status" : 200
+}

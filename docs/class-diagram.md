@@ -1,6 +1,35 @@
 # クラス図
 
-## 全体クラス図
+## 検索 API（api モジュール）
+
+```mermaid
+classDiagram
+    direction LR
+
+    class ArticleSearchController {
+        +search(String, int) ArticleSearchResponse
+    }
+    class ArticleSearchService {
+        +search(String, int) ArticleSearchResult
+    }
+    class ArticleSearchRepository {
+        <<interface>>
+        +search(ArticleSearchQuery) ArticleSearchResult
+    }
+    class OpenSearchArticleSearchRepository {
+        +search(ArticleSearchQuery) ArticleSearchResult
+    }
+    class SearchExceptionHandler {
+        +handleSearchUnavailable(SearchUnavailableException) ProblemDetail
+    }
+
+    ArticleSearchController --> ArticleSearchService
+    ArticleSearchService --> ArticleSearchRepository
+    OpenSearchArticleSearchRepository ..|> ArticleSearchRepository
+    OpenSearchArticleSearchRepository --> FullTextSearchService
+```
+
+## 全体クラス図（core モジュール）
 
 ```mermaid
 classDiagram
@@ -114,6 +143,7 @@ classDiagram
         +phraseMatchQuery(String, String, String, Class~T~) SearchResponse~T~
         +wildcardQuery(String, String, String, Class~T~) SearchResponse~T~
         +searchWithHighlight(String, String, String, Class~T~) SearchResponse~T~
+        +multiMatchWithHighlight(String, List~String~, String, int, String, Class~T~) SearchResponse~T~
         +extractDocuments(SearchResponse~T~) List~T~
         +extractHighlights(Hit~T~) Map
     }

@@ -1,0 +1,45 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "technology",
+      "content" : "OpenSearch is a powerful open-source search and analytics engine.",
+      "highlights" : {
+        "content" : [ "<em>OpenSearch</em> is a powerful open-source search and analytics engine." ],
+        "title" : [ "Introduction to <em>OpenSearch</em>" ]
+      },
+      "id" : "1",
+      "score" : 1.0011251,
+      "title" : "Introduction to OpenSearch"
+    }, {
+      "category" : "analytics",
+      "content" : "Use OpenSearch for powerful data analytics and visualization.",
+      "highlights" : {
+        "content" : [ "Use <em>OpenSearch</em> for powerful data analytics and visualization." ],
+        "title" : [ "Data Analytics with <em>OpenSearch</em>" ]
+      },
+      "id" : "4",
+      "score" : 0.8829411,
+      "title" : "Data Analytics with OpenSearch"
+    }, {
+      "category" : "technology",
+      "content" : "OpenSearch supports k-NN vector search for similarity matching.",
+      "highlights" : {
+        "content" : [ "<em>OpenSearch</em> supports k-NN vector search for similarity matching." ]
+      },
+      "id" : "3",
+      "score" : 0.7493502,
+      "title" : "Vector Search Basics"
+    }, {
+      "category" : "tutorial",
+      "content" : "Learn how to implement full-text search with OpenSearch queries.",
+      "highlights" : {
+        "content" : [ "Learn how to implement full-text search with <em>OpenSearch</em> queries." ]
+      },
+      "id" : "2",
+      "score" : 0.7185215,
+      "title" : "Full-Text Search Guide"
+    } ],
+    "total" : 4
+  },
+  "status" : 200
+}

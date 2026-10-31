@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: opensearch-sandbox-api
+  mvc:
+    problemdetails:
+      enabled: true
+
+opensearch:
+  host: ${OPENSEARCH_HOST:localhost}
+  port: ${OPENSEARCH_PORT:9200}
+  scheme: ${OPENSEARCH_SCHEME:http}
+  connection-timeout: ${OPENSEARCH_CONNECTION_TIMEOUT:5000}
+  socket-timeout: ${OPENSEARCH_SOCKET_TIMEOUT:60000}
+  index: ${OPENSEARCH_INDEX:articles}
