@@ -38,7 +38,7 @@ import java.util.Map;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ArticleSearchRegressionIT {
 
-    private static final Path RESOURCES = Path.of("src/test/resources/regression");
+    private static final Path RESOURCES = Path.of("src/integration-test/resources/regression");
     private static final Path GOLDEN = RESOURCES.resolve("golden");
     private static final boolean UPDATE = Boolean.getBoolean("regression.update");
 

@@ -1,6 +1,7 @@
 ---
 paths:
   - "**/src/test/**/*.java"
+  - "**/src/integration-test/**/*.java"
 ---
 
 # テスト作成ルール
@@ -37,7 +38,8 @@ class CreateIndex {
 - テストクラスは、対象クラスと同じパッケージに `<対象クラス名>Test` という名前で作成します。
 - メソッド名は `test` で始め、検証内容が分かる名前にします。
 - 関連するテストは、機能ごとに `@Nested` クラスでまとめます。
-- OpenSearch の起動が必要な結合テストは `<対象>IT` という名前にします。`mvn test` では実行されず、`mvn verify -Pregression` で実行されます。
+- 単体テストは `src/test`、OpenSearch の起動が必要な結合テストは `src/integration-test` に置きます。
+- 結合テストは `<対象>IT` という名前にします。`mvn test` では実行されず、`mvn verify -Pregression` で実行されます。
 
 ## 使用ライブラリ
 

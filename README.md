@@ -78,7 +78,7 @@ mvn verify -Pregression
 docker compose down -v
 ```
 
-テストケースは `api/src/test/resources/regression/` で管理します。
+結合テストのコードは `api/src/integration-test/java/`、テストケースは `api/src/integration-test/resources/regression/` で管理します。
 
 | ファイル | 内容 |
 |---|---|

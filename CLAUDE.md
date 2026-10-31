@@ -94,7 +94,10 @@ api/src/main/java/com/kimai07/opensearch/api/
     ├── dto/
     └── error/
 
-api/src/test/resources/regression/     # テストケース、期待値、投入データ
+api/src/test/java/                     # 単体テスト
+api/src/integration-test/
+├── java/                              # 結合テスト（*IT）
+└── resources/regression/              # テストケース、期待値、投入データ
 ```
 
 検索対象のデータが増えたら、種類ごとに service と repository を追加する。
