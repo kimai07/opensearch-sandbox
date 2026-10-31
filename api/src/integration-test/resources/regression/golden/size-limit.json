@@ -1,0 +1,27 @@
+{
+  "body" : {
+    "hits" : [ {
+      "category" : "technology",
+      "content" : "OpenSearch supports k-NN vector search for similarity matching.",
+      "highlights" : {
+        "content" : [ "OpenSearch supports k-NN vector <em>search</em> for similarity matching." ],
+        "title" : [ "Vector <em>Search</em> Basics" ]
+      },
+      "id" : "3",
+      "score" : 0.6381666,
+      "title" : "Vector Search Basics"
+    }, {
+      "category" : "tutorial",
+      "content" : "Highlighting shows users why a document matched their search query.",
+      "highlights" : {
+        "content" : [ "Highlighting shows users why a document matched their <em>search</em> query." ],
+        "title" : [ "Highlighting <em>Search</em> Results" ]
+      },
+      "id" : "9",
+      "score" : 0.6381666,
+      "title" : "Highlighting Search Results"
+    } ],
+    "total" : 6
+  },
+  "status" : 200
+}

@@ -25,9 +25,9 @@ services:
       - opensearch-net
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:3.9.0

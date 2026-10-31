@@ -1,0 +1,454 @@
+package com.kimai07.opensearch.search;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.kimai07.opensearch.client.SearchClient;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Nested;
+import org.mockito.ArgumentCaptor;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.mapping.FieldType;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.HighlighterEncoder;
+import org.opensearch.client.opensearch.core.search.Hit;
+import org.opensearch.client.opensearch.core.search.HitsMetadata;
+import org.opensearch.client.opensearch.core.search.TotalHits;
+import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class FullTextSearchServiceTest {
+
+    private SearchClient mockClient;
+
+    private FullTextSearchService service;
+
+    @BeforeEach
+    void setUp() {
+        mockClient = mock(SearchClient.class);
+        service = new FullTextSearchService(mockClient);
+    }
+
+    @Nested
+    class ExtractDocuments {
+        @Test
+        @DisplayName("ヒットなしの場合、ドキュメント一覧が空であること")
+        void testExtractDocumentsFromEmptyResponse() {
+            // 空のレスポンスを作成
+            SearchResponse<String> response = createMockSearchResponse(List.of());
+
+            List<String> documents = service.extractDocuments(response);
+
+            assertThat(documents).isEmpty();
+        }
+
+        @Test
+        @DisplayName("ヒットありの場合、ドキュメント一覧がヒット順であること")
+        void testExtractDocumentsFromResponseWithHits() {
+            // ヒットありのレスポンスを作成
+            List<Hit<String>> hits = List.of(createMockHit("1", "Document 1", 1.0),
+                    createMockHit("2", "Document 2", 0.9), createMockHit("3", "Document 3", 0.8));
+            SearchResponse<String> response = createMockSearchResponse(hits);
+
+            List<String> documents = service.extractDocuments(response);
+
+            assertThat(documents).hasSize(3).containsExactly("Document 1", "Document 2", "Document 3");
+        }
+
+        @Test
+        @DisplayName("sourceがnullなヒットを含む場合、該当要素がnullであること")
+        void testExtractDocumentsWithNullSource() {
+            // source が null のヒットを含むレスポンス
+            List<Hit<String>> hits = List.of(createMockHit("1", null, 1.0), createMockHit("2", "Document 2", 0.9));
+            SearchResponse<String> response = createMockSearchResponse(hits);
+
+            List<String> documents = service.extractDocuments(response);
+
+            assertThat(documents).hasSize(2).containsExactly(null, "Document 2");
+        }
+    }
+
+    @Nested
+    class ExtractHighlights {
+        @Test
+        @DisplayName("ハイライトありの場合、対象フィールドのハイライトが取得結果であること")
+        void testExtractHighlightsFromHit() {
+            Map<String, List<String>> highlights = Map.of("content", List.of("<em>OpenSearch</em> is great"));
+            Hit<String> hit = createMockHitWithHighlight("1", "content", 1.0, highlights);
+
+            Map<String, List<String>> extracted = service.extractHighlights(hit);
+
+            assertThat(extracted).containsKey("content");
+            assertThat(extracted.get("content")).containsExactly("<em>OpenSearch</em> is great");
+        }
+
+        @Test
+        @DisplayName("複数フィールドのハイライトの場合、取得結果が全フィールド分であること")
+        void testExtractHighlightsWithMultipleFields() {
+            Map<String, List<String>> highlights = Map.of("title", List.of("<em>Search</em> Guide"), "content",
+                    List.of("<em>Search</em> is powerful", "Learn <em>Search</em>"));
+            Hit<String> hit = createMockHitWithHighlight("1", "content", 1.0, highlights);
+
+            Map<String, List<String>> extracted = service.extractHighlights(hit);
+
+            assertThat(extracted).hasSize(2);
+            assertThat(extracted.get("title")).hasSize(1);
+            assertThat(extracted.get("content")).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("ハイライトなしの場合、取得結果が空であること")
+        void testExtractHighlightsWhenEmpty() {
+            Hit<String> hit = createMockHitWithHighlight("1", "content", 1.0, Map.of());
+
+            Map<String, List<String>> extracted = service.extractHighlights(hit);
+
+            assertThat(extracted).isEmpty();
+        }
+    }
+
+    @Nested
+    class MatchQuery {
+        @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
+        void testMatchQueryThrowsIOExceptionOnError() throws IOException {
+            when(mockClient.search(any(SearchRequest.class), eq(String.class)))
+                    .thenThrow(new IOException("Connection failed"));
+
+            assertThatThrownBy(() -> service.matchQuery("test-index", "content", "search", String.class))
+                    .isInstanceOf(IOException.class).hasMessage("Connection failed");
+        }
+
+        @Test
+        @DisplayName("ヒットありの場合、レスポンスのヒット数が1件であること")
+        void testMatchQueryReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(
+                    List.of(createMockHit("1", "Result 1", 1.0)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.matchQuery("test-index", "content", "search", String.class);
+
+            assertThat(response).isNotNull();
+            assertThat(response.hits().hits()).hasSize(1);
+        }
+    }
+
+    @Nested
+    class BoolQuery {
+        @Test
+        @DisplayName("条件がすべてnullな場合、レスポンスがnull以外であること")
+        void testBoolQueryWithAllNullConditions() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.boolQuery("test-index", null, null, null, String.class);
+
+            assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("条件がすべて空な場合、レスポンスがnull以外であること")
+        void testBoolQueryWithEmptyConditions() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.boolQuery("test-index", List.of(), List.of(), List.of(),
+                    String.class);
+
+            assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
+        void testBoolQueryThrowsIOExceptionOnError() throws IOException {
+            when(mockClient.search(any(SearchRequest.class), eq(String.class)))
+                    .thenThrow(new IOException("Search failed"));
+
+            List<Query> must = List.of(Query.of(q -> q.matchAll(m -> m)));
+
+            assertThatThrownBy(() -> service.boolQuery("test-index", must, null, null, String.class))
+                    .isInstanceOf(IOException.class).hasMessage("Search failed");
+        }
+    }
+
+    @Nested
+    class FuzzyQuery {
+        @Test
+        @DisplayName("ヒットありの場合、レスポンスのヒット数が1件であること")
+        void testFuzzyQueryReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(
+                    List.of(createMockHit("1", "OpenSearch", 0.9)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.fuzzyQuery("test-index", "content", "OpenSearch", "2",
+                    String.class);
+
+            assertThat(response).isNotNull();
+            assertThat(response.hits().hits()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
+        void testFuzzyQueryThrowsIOExceptionOnError() throws IOException {
+            when(mockClient.search(any(SearchRequest.class), eq(String.class)))
+                    .thenThrow(new IOException("Fuzzy search failed"));
+
+            assertThatThrownBy(() -> service.fuzzyQuery("test-index", "content", "test", "AUTO", String.class))
+                    .isInstanceOf(IOException.class).hasMessage("Fuzzy search failed");
+        }
+    }
+
+    @Nested
+    class MultiMatchQuery {
+        @Test
+        @DisplayName("複数フィールドを指定した場合、レスポンスがnull以外であること")
+        void testMultiMatchQueryReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of(createMockHit("1", "Result", 1.0)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.multiMatchQuery("test-index", List.of("title", "content"),
+                    "search", String.class);
+
+            assertThat(response).isNotNull();
+        }
+
+        @Test
+        @DisplayName("フィールドが空な場合、レスポンスがnull以外であること")
+        void testMultiMatchQueryWithEmptyFields() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.multiMatchQuery("test-index", List.of(), "search", String.class);
+
+            assertThat(response).isNotNull();
+        }
+    }
+
+    @Nested
+    class PhraseMatchQuery {
+        @Test
+        @DisplayName("ヒットありの場合、レスポンスがnull以外であること")
+        void testPhraseMatchQueryReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(
+                    List.of(createMockHit("1", "Exact phrase match", 1.0)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.phraseMatchQuery("test-index", "content", "exact phrase",
+                    String.class);
+
+            assertThat(response).isNotNull();
+        }
+    }
+
+    @Nested
+    class WildcardQuery {
+        @Test
+        @DisplayName("複数ヒットした場合、レスポンスのヒット数が2件であること")
+        void testWildcardQueryReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(
+                    List.of(createMockHit("1", "Testing", 1.0), createMockHit("2", "Tested", 0.9)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.wildcardQuery("test-index", "content", "test*", String.class);
+
+            assertThat(response).isNotNull();
+            assertThat(response.hits().hits()).hasSize(2);
+        }
+    }
+
+    @Nested
+    class SearchWithHighlight {
+        @Test
+        @DisplayName("ヒットありの場合、レスポンスがnull以外であること")
+        void testSearchWithHighlightReturnsResponse() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(
+                    List.of(createMockHit("1", "Result with highlight", 1.0)));
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            SearchResponse<String> response = service.searchWithHighlight("test-index", "content", "highlight",
+                    String.class);
+
+            assertThat(response).isNotNull();
+        }
+    }
+
+    @Nested
+    class LogSanitization {
+        @Test
+        @DisplayName("Match Queryの検索文字列に改行を含む場合、ログのメッセージが改行なしであること")
+        void testMatchQueryRemovesLineBreaksFromLog() throws IOException {
+            Logger logger = (Logger) LoggerFactory.getLogger(FullTextSearchService.class);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            try {
+                service.matchQuery("test-index", "content", "search\nERROR forged entry", String.class);
+            } finally {
+                logger.detachAppender(appender);
+            }
+
+            assertThat(appender.list).isNotEmpty()
+                    .allSatisfy(event -> assertThat(event.getFormattedMessage()).doesNotContain("\n"));
+        }
+    }
+
+    @Nested
+    class HighlightEncoding {
+        @Test
+        @DisplayName("ハイライト付き検索の場合、ハイライトのエンコーダーがHTMLであること")
+        void testSearchWithHighlightEscapesHtml() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            service.searchWithHighlight("test-index", "content", "highlight", String.class);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(mockClient).search(captor.capture(), eq(String.class));
+            assertThat(captor.getValue().highlight().encoder()).isEqualTo(HighlighterEncoder.Html);
+        }
+    }
+
+    @Nested
+    class MultiMatchWithHighlight {
+        @Test
+        @DisplayName("サイズを指定した場合、リクエストのサイズが指定値であること")
+        void testMultiMatchWithHighlightAppliesSize() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.size()).isEqualTo(5);
+        }
+
+        @Test
+        @DisplayName("同点の順序を固定するため、ソートがスコア降順と指定フィールド昇順の順であること")
+        void testMultiMatchWithHighlightAppliesSort() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.sort()).hasSize(2);
+            assertThat(request.sort().get(0).isScore()).isTrue();
+            assertThat(request.sort().get(0).score().order()).isEqualTo(SortOrder.Desc);
+            assertThat(request.sort().get(1).field().field()).isEqualTo("article_id");
+            assertThat(request.sort().get(1).field().order()).isEqualTo(SortOrder.Asc);
+        }
+
+        @Test
+        @DisplayName("スコアが取得できるよう、リクエストのスコア追跡が有効であること")
+        void testMultiMatchWithHighlightTracksScores() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.trackScores()).isTrue();
+        }
+
+        @Test
+        @DisplayName("複数フィールドを指定した場合、全フィールドがハイライト対象であること")
+        void testMultiMatchWithHighlightAppliesHighlightFields() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.highlight().fields()).containsOnlyKeys("title", "content");
+        }
+
+        @Test
+        @DisplayName("本文のHTMLが無害化されるよう、ハイライトのエンコーダーがHTMLであること")
+        void testMultiMatchWithHighlightEscapesHtml() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.highlight().encoder()).isEqualTo(HighlighterEncoder.Html);
+        }
+
+        @Test
+        @DisplayName("同点用フィールドがないインデックスでも検索できるよう、ソートの未定義時の型がkeywordであること")
+        void testMultiMatchWithHighlightToleratesUnmappedTieBreaker() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.sort().get(1).field().unmappedType()).isEqualTo(FieldType.Keyword);
+        }
+
+        @Test
+        @DisplayName("検索文字列に改行を含む場合、ログのメッセージが改行なしであること")
+        void testMultiMatchWithHighlightRemovesLineBreaksFromLog() throws IOException {
+            Logger logger = (Logger) LoggerFactory.getLogger(FullTextSearchService.class);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            try {
+                service.multiMatchWithHighlight("test-index", List.of("title"), "search\r\nERROR forged entry", 5,
+                        "article_id", String.class);
+            } finally {
+                logger.detachAppender(appender);
+            }
+
+            assertThat(appender.list).isNotEmpty().allSatisfy(
+                    event -> assertThat(event.getFormattedMessage()).doesNotContain("\n").doesNotContain("\r"));
+        }
+
+        @Test
+        @DisplayName("通信エラーが発生した場合、例外がIOExceptionであること")
+        void testMultiMatchWithHighlightThrowsIOExceptionOnError() throws IOException {
+            when(mockClient.search(any(SearchRequest.class), eq(String.class)))
+                    .thenThrow(new IOException("Connection failed"));
+
+            assertThatThrownBy(() -> service.multiMatchWithHighlight("test-index", List.of("title", "content"),
+                    "search", 5, "article_id", String.class)).isInstanceOf(IOException.class)
+                            .hasMessage("Connection failed");
+        }
+
+        private SearchRequest executeMultiMatchWithHighlight() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            service.multiMatchWithHighlight("test-index", List.of("title", "content"), "search", 5, "article_id",
+                    String.class);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(mockClient).search(captor.capture(), eq(String.class));
+            return captor.getValue();
+        }
+    }
+
+    // ヘルパーメソッド
+    @SuppressWarnings("unchecked")
+    private <T> SearchResponse<T> createMockSearchResponse(List<Hit<T>> hits) {
+        TotalHits totalHits = TotalHits.of(t -> t.value(hits.size()).relation(TotalHitsRelation.Eq));
+
+        HitsMetadata<T> hitsMetadata = mock(HitsMetadata.class);
+        when(hitsMetadata.total()).thenReturn(totalHits);
+        when(hitsMetadata.hits()).thenReturn(hits);
+
+        SearchResponse<T> response = mock(SearchResponse.class);
+        when(response.took()).thenReturn(10L);
+        when(response.timedOut()).thenReturn(false);
+        when(response.hits()).thenReturn(hitsMetadata);
+
+        return response;
+    }
+
+    private <T> Hit<T> createMockHit(String id, T source, double score) {
+        return createMockHitWithHighlight(id, source, score, Map.of());
+    }
+
+    private <T> Hit<T> createMockHitWithHighlight(String id, T source, double score,
+            Map<String, List<String>> highlight) {
+        return Hit.of(h -> h.index("test-index").id(id).score(score).source(source).highlight(highlight));
+    }
+}

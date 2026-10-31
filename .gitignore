@@ -29,3 +29,6 @@ replay_pid*
 
 # Build output
 target/
+
+# Working notes
+_work/
