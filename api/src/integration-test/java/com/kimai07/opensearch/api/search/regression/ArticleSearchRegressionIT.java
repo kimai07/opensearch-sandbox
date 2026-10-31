@@ -7,6 +7,7 @@ import com.kimai07.opensearch.api.config.OpenSearchProperties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -26,6 +27,11 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 検索APIのレスポンスを期待値と比較する。
@@ -59,6 +65,9 @@ class ArticleSearchRegressionIT {
         if (UPDATE && System.getenv("CI") != null) {
             throw new IllegalStateException("Golden files must not be updated in CI");
         }
+        if (UPDATE) {
+            deleteOrphanedGoldenFiles();
+        }
         data = new RegressionData(httpClient, properties.toConfig().getConnectionUrl(), properties.index(), RESOURCES);
         data.reset();
     }
@@ -86,6 +95,28 @@ class ArticleSearchRegressionIT {
             return;
         }
         JSONAssert.assertEquals(Files.readString(golden), actual, JSONCompareMode.STRICT);
+    }
+
+    @Test
+    @DisplayName("期待値ファイルのすべてがcases.jsonのケースに対応した状態であること")
+    void testGoldenFilesHaveMatchingCases() throws IOException {
+        assertThat(orphanedGoldenFiles()).isEmpty();
+    }
+
+    private void deleteOrphanedGoldenFiles() throws IOException {
+        for (Path orphan : orphanedGoldenFiles()) {
+            Files.delete(orphan);
+        }
+    }
+
+    private List<Path> orphanedGoldenFiles() throws IOException {
+        if (Files.notExists(GOLDEN)) {
+            return List.of();
+        }
+        Set<String> expected = cases().stream().map(c -> c.name() + ".json").collect(Collectors.toSet());
+        try (Stream<Path> files = Files.list(GOLDEN)) {
+            return files.filter(file -> !expected.contains(file.getFileName().toString())).toList();
+        }
     }
 
     private String fetch(RegressionCase regressionCase) throws IOException, InterruptedException {

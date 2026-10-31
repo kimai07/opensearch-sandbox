@@ -8,7 +8,7 @@
         "title" : [ "<em>Vector</em> <em>Search</em> Basics" ]
       },
       "id" : "3",
-      "score" : 1.8444915,
+      "score" : 1.8744452,
       "title" : "Vector Search Basics"
     }, {
       "category" : "technology",
@@ -18,7 +18,7 @@
         "title" : [ "Semantic <em>Search</em> with Embeddings" ]
       },
       "id" : "14",
-      "score" : 1.4383392,
+      "score" : 1.4759572,
       "title" : "Semantic Search with Embeddings"
     }, {
       "category" : "tutorial",
@@ -28,7 +28,7 @@
         "title" : [ "Highlighting <em>Search</em> Results" ]
       },
       "id" : "9",
-      "score" : 0.62108743,
+      "score" : 0.6381666,
       "title" : "Highlighting Search Results"
     }, {
       "category" : "tutorial",
@@ -38,7 +38,7 @@
         "title" : [ "Full-Text <em>Search</em> Guide" ]
       },
       "id" : "2",
-      "score" : 0.5484456,
+      "score" : 0.5628303,
       "title" : "Full-Text Search Guide"
     }, {
       "category" : "operations",
@@ -48,7 +48,7 @@
         "title" : [ "Scaling a <em>Search</em> Cluster" ]
       },
       "id" : "7",
-      "score" : 0.5484456,
+      "score" : 0.5628303,
       "title" : "Scaling a Search Cluster"
     }, {
       "category" : "technology",
@@ -57,7 +57,7 @@
         "content" : [ "OpenSearch is a powerful open-source <em>search</em> and analytics engine." ]
       },
       "id" : "1",
-      "score" : 0.5319611,
+      "score" : 0.5520287,
       "title" : "Introduction to OpenSearch"
     } ],
     "total" : 6

@@ -3,6 +3,7 @@
   { "name": "multiple-hits", "q": "OpenSearch" },
   { "name": "multiple-terms", "q": "vector search" },
   { "name": "tied-scores", "q": "tiebreak" },
+  { "name": "html-in-content", "q": "sanitizer" },
   { "name": "no-hits", "q": "nonexistentterm" },
   { "name": "size-limit", "q": "search", "size": 2 },
   { "name": "blank-query", "q": " " },

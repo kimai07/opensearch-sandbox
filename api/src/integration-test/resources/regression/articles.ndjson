@@ -38,3 +38,5 @@
 {"article_id":"a-020","title":"Tiebreak Sample","content":"Identical text used to verify a stable order for equal scores.","category":"testing"}
 {"index":{"_id":"19"}}
 {"article_id":"a-019","title":"Tiebreak Sample","content":"Identical text used to verify a stable order for equal scores.","category":"testing"}
+{"index":{"_id":"21"}}
+{"article_id":"a-021","title":"Escaping Markup","content":"A sanitizer removes <script>alert(1)</script> from markup.","category":"testing"}

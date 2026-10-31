@@ -32,12 +32,24 @@ final class RegressionData {
      * インデックスを作り直してデータを投入する。投入データはすぐに検索できる状態になる。
      */
     void reset() throws IOException, InterruptedException {
+        reset("mapping.json", "articles.ndjson");
+    }
+
+    /**
+     * 指定したファイルでインデックスを作り直してデータを投入する。
+     *
+     * @param mapping
+     *            インデックス定義のファイル名
+     * @param documents
+     *            投入データのファイル名
+     */
+    void reset(String mapping, String documents) throws IOException, InterruptedException {
         delete();
-        send(json(HttpRequest.newBuilder(URI.create(indexUrl)), "PUT", "mapping.json"), "index creation");
+        send(json(HttpRequest.newBuilder(URI.create(indexUrl)), "PUT", mapping), "index creation");
 
         HttpRequest bulk = HttpRequest.newBuilder(URI.create(indexUrl + "/_bulk?refresh=true"))
                 .header("Content-Type", "application/x-ndjson")
-                .POST(HttpRequest.BodyPublishers.ofFile(resources.resolve("articles.ndjson"))).build();
+                .POST(HttpRequest.BodyPublishers.ofFile(resources.resolve(documents))).build();
         assertThat(send(bulk, "bulk indexing")).as("bulk indexing errors").contains("\"errors\":false");
     }
 

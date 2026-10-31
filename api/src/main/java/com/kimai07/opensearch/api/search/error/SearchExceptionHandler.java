@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * APIの例外をレスポンスに変換する。
+ * 検索機能の例外をレスポンスに変換する。
  */
 @RestControllerAdvice
-public class ApiExceptionHandler {
+public class SearchExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApiExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(SearchExceptionHandler.class);
 
     /**
      * 検索エンジンの障害を503に変換する。例外の詳細はログにだけ出力する。

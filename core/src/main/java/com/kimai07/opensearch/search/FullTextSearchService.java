@@ -5,12 +5,14 @@ import com.kimai07.opensearch.client.OpenSearchSearchClient;
 import com.kimai07.opensearch.client.SearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.HighlightField;
+import org.opensearch.client.opensearch.core.search.HighlighterEncoder;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +80,8 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> matchQuery(String indexName, String field, String query, Class<T> clazz)
             throws IOException {
-        logger.info("Executing match query on index: {}, field: {}, query: {}", indexName, field, query);
+        logger.info("Executing match query on index: {}, field: {}, query: {}", indexName, field,
+                sanitizeForLog(query));
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.match(m -> m.field(field).query(FieldValue.of(query)))).build();
@@ -112,7 +115,8 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> multiMatchQuery(String indexName, List<String> fields, String query, Class<T> clazz)
             throws IOException {
-        logger.info("Executing multi-match query on index: {}, fields: {}, query: {}", indexName, fields, query);
+        logger.info("Executing multi-match query on index: {}, fields: {}, query: {}", indexName, fields,
+                sanitizeForLog(query));
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.multiMatch(m -> m.fields(fields).query(query))).build();
@@ -196,8 +200,8 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> fuzzyQuery(String indexName, String field, String value, String fuzziness,
             Class<T> clazz) throws IOException {
-        logger.info("Executing fuzzy query on index: {}, field: {}, value: {}, fuzziness: {}", indexName, field, value,
-                fuzziness);
+        logger.info("Executing fuzzy query on index: {}, field: {}, value: {}, fuzziness: {}", indexName, field,
+                sanitizeForLog(value), fuzziness);
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.fuzzy(f -> f.field(field).value(FieldValue.of(value)).fuzziness(fuzziness))).build();
@@ -231,9 +235,10 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> searchWithHighlight(String indexName, String field, String query, Class<T> clazz)
             throws IOException {
-        logger.info("Executing search with highlight on index: {}, field: {}, query: {}", indexName, field, query);
+        logger.info("Executing search with highlight on index: {}, field: {}, query: {}", indexName, field,
+                sanitizeForLog(query));
 
-        Highlight highlight = new Highlight.Builder()
+        Highlight highlight = new Highlight.Builder().encoder(HighlighterEncoder.Html)
                 .fields(field, new HighlightField.Builder().preTags("<em>").postTags("</em>").build()).build();
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
@@ -273,17 +278,17 @@ public class FullTextSearchService {
     public <T> SearchResponse<T> multiMatchWithHighlight(String indexName, List<String> fields, String query, int size,
             String tieBreakerField, Class<T> clazz) throws IOException {
         logger.info("Executing multi-match with highlight on index: {}, fields: {}, query: {}", indexName, fields,
-                query);
+                sanitizeForLog(query));
 
-        Highlight.Builder highlight = new Highlight.Builder();
+        Highlight.Builder highlight = new Highlight.Builder().encoder(HighlighterEncoder.Html);
         fields.forEach(field -> highlight.fields(field,
                 new HighlightField.Builder().preTags("<em>").postTags("</em>").build()));
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.multiMatch(m -> m.fields(fields).query(query))).size(size).trackScores(true)
                 .sort(s -> s.score(o -> o.order(SortOrder.Desc)))
-                .sort(s -> s.field(f -> f.field(tieBreakerField).order(SortOrder.Asc))).highlight(highlight.build())
-                .build();
+                .sort(s -> s.field(f -> f.field(tieBreakerField).order(SortOrder.Asc).unmappedType(FieldType.Keyword)))
+                .highlight(highlight.build()).build();
 
         SearchResponse<T> response = client.search(request, clazz);
         logger.info("Multi-match with highlight returned {} hits",
@@ -315,7 +320,8 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> phraseMatchQuery(String indexName, String field, String phrase, Class<T> clazz)
             throws IOException {
-        logger.info("Executing phrase match query on index: {}, field: {}, phrase: {}", indexName, field, phrase);
+        logger.info("Executing phrase match query on index: {}, field: {}, phrase: {}", indexName, field,
+                sanitizeForLog(phrase));
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.matchPhrase(m -> m.field(field).query(phrase))).build();
@@ -349,7 +355,8 @@ public class FullTextSearchService {
      */
     public <T> SearchResponse<T> wildcardQuery(String indexName, String field, String pattern, Class<T> clazz)
             throws IOException {
-        logger.info("Executing wildcard query on index: {}, field: {}, pattern: {}", indexName, field, pattern);
+        logger.info("Executing wildcard query on index: {}, field: {}, pattern: {}", indexName, field,
+                sanitizeForLog(pattern));
 
         SearchRequest request = new SearchRequest.Builder().index(indexName)
                 .query(q -> q.wildcard(w -> w.field(field).value(pattern))).build();
@@ -385,5 +392,9 @@ public class FullTextSearchService {
      */
     public <T> Map<String, List<String>> extractHighlights(Hit<T> hit) {
         return hit.highlight();
+    }
+
+    private static String sanitizeForLog(String value) {
+        return value.replaceAll("[\\r\\n]", " ");
     }
 }

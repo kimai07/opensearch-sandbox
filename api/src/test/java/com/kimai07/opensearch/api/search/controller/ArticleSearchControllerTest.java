@@ -1,6 +1,6 @@
 package com.kimai07.opensearch.api.search.controller;
 
-import com.kimai07.opensearch.api.search.error.ApiExceptionHandler;
+import com.kimai07.opensearch.api.search.error.SearchExceptionHandler;
 import com.kimai07.opensearch.api.search.error.SearchUnavailableException;
 import com.kimai07.opensearch.api.search.model.ArticleHit;
 import com.kimai07.opensearch.api.search.model.ArticleSearchResult;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ArticleSearchController.class)
-@Import(ApiExceptionHandler.class)
+@Import(SearchExceptionHandler.class)
 class ArticleSearchControllerTest {
 
     private static final String PATH = "/api/v1/articles/search";

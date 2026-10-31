@@ -1,5 +1,8 @@
 package com.kimai07.opensearch.search;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.kimai07.opensearch.client.SearchClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -7,13 +10,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
 import org.mockito.ArgumentCaptor;
 import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.HighlighterEncoder;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.core.search.HitsMetadata;
 import org.opensearch.client.opensearch.core.search.TotalHits;
 import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -283,6 +289,45 @@ class FullTextSearchServiceTest {
     }
 
     @Nested
+    class LogSanitization {
+        @Test
+        @DisplayName("Match Queryの検索文字列に改行を含む場合、ログのメッセージが改行なしであること")
+        void testMatchQueryRemovesLineBreaksFromLog() throws IOException {
+            Logger logger = (Logger) LoggerFactory.getLogger(FullTextSearchService.class);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            try {
+                service.matchQuery("test-index", "content", "search\nERROR forged entry", String.class);
+            } finally {
+                logger.detachAppender(appender);
+            }
+
+            assertThat(appender.list).isNotEmpty()
+                    .allSatisfy(event -> assertThat(event.getFormattedMessage()).doesNotContain("\n"));
+        }
+    }
+
+    @Nested
+    class HighlightEncoding {
+        @Test
+        @DisplayName("ハイライト付き検索の場合、ハイライトのエンコーダーがHTMLであること")
+        void testSearchWithHighlightEscapesHtml() throws IOException {
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            service.searchWithHighlight("test-index", "content", "highlight", String.class);
+
+            ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+            verify(mockClient).search(captor.capture(), eq(String.class));
+            assertThat(captor.getValue().highlight().encoder()).isEqualTo(HighlighterEncoder.Html);
+        }
+    }
+
+    @Nested
     class MultiMatchWithHighlight {
         @Test
         @DisplayName("サイズを指定した場合、リクエストのサイズが指定値であること")
@@ -318,6 +363,43 @@ class FullTextSearchServiceTest {
             SearchRequest request = executeMultiMatchWithHighlight();
 
             assertThat(request.highlight().fields()).containsOnlyKeys("title", "content");
+        }
+
+        @Test
+        @DisplayName("本文のHTMLが無害化されるよう、ハイライトのエンコーダーがHTMLであること")
+        void testMultiMatchWithHighlightEscapesHtml() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.highlight().encoder()).isEqualTo(HighlighterEncoder.Html);
+        }
+
+        @Test
+        @DisplayName("同点用フィールドがないインデックスでも検索できるよう、ソートの未定義時の型がkeywordであること")
+        void testMultiMatchWithHighlightToleratesUnmappedTieBreaker() throws IOException {
+            SearchRequest request = executeMultiMatchWithHighlight();
+
+            assertThat(request.sort().get(1).field().unmappedType()).isEqualTo(FieldType.Keyword);
+        }
+
+        @Test
+        @DisplayName("検索文字列に改行を含む場合、ログのメッセージが改行なしであること")
+        void testMultiMatchWithHighlightRemovesLineBreaksFromLog() throws IOException {
+            Logger logger = (Logger) LoggerFactory.getLogger(FullTextSearchService.class);
+            ListAppender<ILoggingEvent> appender = new ListAppender<>();
+            appender.start();
+            logger.addAppender(appender);
+            SearchResponse<String> mockResponse = createMockSearchResponse(List.of());
+            when(mockClient.search(any(SearchRequest.class), eq(String.class))).thenReturn(mockResponse);
+
+            try {
+                service.multiMatchWithHighlight("test-index", List.of("title"), "search\r\nERROR forged entry", 5,
+                        "article_id", String.class);
+            } finally {
+                logger.detachAppender(appender);
+            }
+
+            assertThat(appender.list).isNotEmpty().allSatisfy(
+                    event -> assertThat(event.getFormattedMessage()).doesNotContain("\n").doesNotContain("\r"));
         }
 
         @Test
