@@ -1,0 +1,46 @@
+name: Search Regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: テストするPRの番号（空の場合はmain）
+        required: false
+        type: number
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: Compare search responses with expected files
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.pr_number && format('refs/pull/{0}/merge', inputs.pr_number) || 'main' }}
+          persist-credentials: false
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+      - name: Configure kernel for OpenSearch
+        run: sudo sysctl -w vm.max_map_count=262144
+      - name: Start OpenSearch
+        run: docker compose up -d --wait opensearch
+      - name: Run tests and regression comparison
+        run: mvn -B verify -Pregression
+      - name: Show OpenSearch logs
+        if: failure()
+        run: docker compose logs opensearch
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: regression-reports
+          path: api/target/failsafe-reports
+      - name: Stop OpenSearch
+        if: always()
+        run: docker compose down -v
