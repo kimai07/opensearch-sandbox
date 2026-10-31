@@ -4,7 +4,7 @@
 version: 'v0.0.3'
 workflows:
     '.github/workflows/pr-labeler.yml':
-        - 'actions/labeler@v6.2.0'
+        - 'actions/labeler@v7.0.0'
     '.github/workflows/search-compare.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-java@v6.1.0'
@@ -19,9 +19,9 @@ dependencies:
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
         owner_id: 44036562
         repo_id: 197814629
-    'actions/labeler@v6.2.0':
-        ref: 'v6.2.0'
-        commit: 'sha1-b8dd2d9be0f68b860e7dae5dae7d772984eacd6d'
+    'actions/labeler@v7.0.0':
+        ref: 'v7.0.0'
+        commit: 'sha1-bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13'
         owner_id: 44036562
         repo_id: 177139928
     'actions/setup-java@v6.1.0':
