@@ -30,7 +30,7 @@ services:
       retries: 30
 
   opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:3.9.0
+    image: opensearchproject/opensearch-dashboards:3.10.0
     container_name: opensearch-dashboards-sandbox
     environment:
       - OPENSEARCH_HOSTS=["http://opensearch:9200"]
