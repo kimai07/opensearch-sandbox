@@ -1,6 +1,6 @@
 services:
   opensearch:
-    image: opensearchproject/opensearch:3.9.0
+    image: opensearchproject/opensearch:3.10.1
     container_name: opensearch-sandbox
     environment:
       - cluster.name=opensearch-sandbox-cluster
